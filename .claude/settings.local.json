@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(del \"D:\\files\\projects\\tmp\\create_icons.py\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
