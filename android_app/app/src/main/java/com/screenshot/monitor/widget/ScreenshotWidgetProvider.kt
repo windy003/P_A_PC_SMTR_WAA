@@ -3,7 +3,6 @@ package com.screenshot.monitor.widget
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.widget.RemoteViews
 import android.view.View
 import android.util.Log
@@ -89,66 +88,30 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
                         if (response != null && response.status == "has") {
-                            // 状态为"有"：显示图片
-                            views.setViewVisibility(R.id.widget_status_image, View.VISIBLE)
-                            views.setViewVisibility(R.id.widget_time_display_layout, View.GONE)
+                            // 状态为"有"：显示文字 "PC有 + 数量"
+                            views.setViewVisibility(R.id.widget_status_image, View.GONE)
+                            views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
-                            // 加载 has.png 图片 - 针对 Android 13 进行优化
-                            try {
-                                val assetManager = appContext.assets
-                                val inputStream = assetManager.open("has.png")
-
-                                // 使用 BitmapFactory.Options 来压缩图片，避免超过 Android 13 的内存限制
-                                val options = BitmapFactory.Options().apply {
-                                    // 首先只读取图片尺寸，不加载到内存
-                                    inJustDecodeBounds = true
-                                    BitmapFactory.decodeStream(inputStream, null, this)
-                                    inputStream.close()
-
-                                    // 计算合适的采样率
-                                    // Widget 通常不需要超过 512x512 的图片
-                                    val maxSize = 512
-                                    inSampleSize = calculateInSampleSize(this, maxSize, maxSize)
-
-                                    // 现在真正加载图片
-                                    inJustDecodeBounds = false
-                                    // 使用 RGB_565 可以减少 50% 的内存使用（如果不需要透明度）
-                                    inPreferredConfig = android.graphics.Bitmap.Config.RGB_565
-                                }
-
-                                // 重新打开输入流加载压缩后的图片
-                                val compressedStream = assetManager.open("has.png")
-                                val bitmap = BitmapFactory.decodeStream(compressedStream, null, options)
-                                compressedStream.close()
-
-                                if (bitmap != null) {
-                                    Log.d(TAG, "Loaded bitmap: ${bitmap.width}x${bitmap.height}, size: ${bitmap.byteCount} bytes")
-                                    views.setImageViewBitmap(R.id.widget_status_image, bitmap)
-                                } else {
-                                    Log.w(TAG, "Failed to decode bitmap, using default icon")
-                                    views.setImageViewResource(R.id.widget_status_image, R.drawable.ic_launcher)
-                                }
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error loading has.png: ${e.message}", e)
-                                // 如果加载失败，使用默认图标
-                                views.setImageViewResource(R.id.widget_status_image, R.drawable.ic_launcher)
-                            }
-
+                            // 显示 "PC有" 和数量
+                            views.setTextViewText(R.id.widget_date_text, "PC有")
+                            views.setTextViewText(R.id.widget_hour_text, "${response.totalCount}")
+                            views.setTextViewText(R.id.widget_minute_text, "个")
                             views.setTextViewText(R.id.widget_update_time, "最后检查: $timeString")
                         } else {
-                                                    // 状态为"无"：显示时间
-                                                    views.setViewVisibility(R.id.widget_status_image, View.GONE)
-                                                    views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE) // Use new layout ID
-                            
-                                                    // Format individual time components
-                                                    val datePart = SimpleDateFormat("M-d", Locale.getDefault()).format(currentTime.time)
-                                                    val hourPart = SimpleDateFormat("H", Locale.getDefault()).format(currentTime.time)
-                                                    val minutePart = SimpleDateFormat(":mm", Locale.getDefault()).format(currentTime.time) // Include colon with minutes
-                            
-                                                    views.setTextViewText(R.id.widget_date_text, datePart)
-                                                    views.setTextViewText(R.id.widget_hour_text, hourPart)
-                                                    views.setTextViewText(R.id.widget_minute_text, minutePart)
-                                                    views.setTextViewText(R.id.widget_update_time, "上次检查时间")                        }
+                            // 状态为"无"：显示时间
+                            views.setViewVisibility(R.id.widget_status_image, View.GONE)
+                            views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
+
+                            // Format individual time components
+                            val datePart = SimpleDateFormat("M-d", Locale.getDefault()).format(currentTime.time)
+                            val hourPart = SimpleDateFormat("H", Locale.getDefault()).format(currentTime.time)
+                            val minutePart = SimpleDateFormat(":mm", Locale.getDefault()).format(currentTime.time)
+
+                            views.setTextViewText(R.id.widget_date_text, datePart)
+                            views.setTextViewText(R.id.widget_hour_text, hourPart)
+                            views.setTextViewText(R.id.widget_minute_text, minutePart)
+                            views.setTextViewText(R.id.widget_update_time, "上次检查时间")
+                        }
 
                         // 保存最后检查时间
                         sharedPref.edit().putString("last_check_time", timeString).apply()
@@ -167,37 +130,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                     }
                 }
             }
-        }
-
-        /**
-         * 计算合适的图片采样率，用于压缩大图片
-         * @param options BitmapFactory.Options，包含原始图片尺寸
-         * @param reqWidth 目标宽度
-         * @param reqHeight 目标高度
-         * @return 采样率（1, 2, 4, 8...）
-         */
-        private fun calculateInSampleSize(
-            options: BitmapFactory.Options,
-            reqWidth: Int,
-            reqHeight: Int
-        ): Int {
-            // 原始图片尺寸
-            val height = options.outHeight
-            val width = options.outWidth
-            var inSampleSize = 1
-
-            if (height > reqHeight || width > reqWidth) {
-                val halfHeight = height / 2
-                val halfWidth = width / 2
-
-                // 计算最大的 inSampleSize 值，该值是 2 的幂，并保持宽高都大于请求的宽高
-                while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-                    inSampleSize *= 2
-                }
-            }
-
-            Log.d(TAG, "Original size: ${width}x${height}, Sample size: $inSampleSize, Target: ${reqWidth}x${reqHeight}")
-            return inSampleSize
         }
 
         private fun showNoConfigWidget(

@@ -146,6 +146,7 @@ class MainActivity : AppCompatActivity() {
                             |
                             |服务器: $pcIp
                             |状态: $statusText
+                            |PC有: ${response.totalCount} 个文件
                             |服务器消息: ${response.message}
                             |服务器时间: ${response.timestamp}
                             |
