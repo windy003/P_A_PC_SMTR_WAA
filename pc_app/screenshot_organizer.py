@@ -8,9 +8,10 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QColor
 import shutil
+import re
 
 
 class ScreenshotOrganizer(QSystemTrayIcon):
@@ -88,16 +89,101 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         self.show()
 
     def update_icon(self, has_new_folder):
-        """更新托盘图标"""
+        """更新托盘图标，动态显示条目数"""
+        # 统计总条目数
+        total_count = self.count_total_items()
+
+        # 根据状态选择基础图标
         if has_new_folder and self.icon_has.exists():
-            self.setIcon(QIcon(str(self.icon_has)))
+            base_icon_path = self.icon_has
         elif self.icon_none.exists():
-            self.setIcon(QIcon(str(self.icon_none)))
+            base_icon_path = self.icon_none
         else:
             # 如果图标文件不存在，使用默认图标
             self.setIcon(QApplication.style().standardIcon(
                 QApplication.style().SP_FileDialogInfoView
             ))
+            return
+
+        # 创建带数字的图标
+        icon_with_count = self.create_icon_with_count(base_icon_path, total_count)
+        self.setIcon(icon_with_count)
+
+        # 更新工具提示
+        if total_count > 0:
+            self.setToolTip(f"Screenshots 自动整理工具\nPC有 {total_count} 个文件\n每个整点01分自动执行")
+        else:
+            self.setToolTip("Screenshots 自动整理工具\n每个整点01分自动执行")
+
+    def count_total_items(self):
+        """统计所有时间文件夹中的文件总数"""
+        try:
+            if not self.screenshots_path.exists():
+                return 0
+
+            time_folder_pattern = re.compile(r'^\d{2}-\d{2}$')
+            total_count = 0
+
+            for item in self.screenshots_path.iterdir():
+                if item.is_dir() and time_folder_pattern.match(item.name):
+                    folder_file_count = sum(1 for f in item.iterdir() if f.is_file())
+                    total_count += folder_file_count
+
+            return total_count
+        except Exception as e:
+            print(f"统计文件数时出错: {e}")
+            return 0
+
+    def create_icon_with_count(self, base_icon_path, count):
+        """创建带有数字的图标"""
+        # 加载基础图标
+        pixmap = QPixmap(str(base_icon_path))
+        if pixmap.isNull():
+            # 如果加载失败，创建一个默认图标
+            pixmap = QPixmap(64, 64)
+            pixmap.fill(QColor(200, 200, 200))
+
+        # 确保图标大小合适（系统托盘通常是 16x16 或 32x32）
+        pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        # 如果有条目，在图标上绘制数字
+        if count > 0:
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+
+            # 设置字体
+            font = QFont("Arial", 32, QFont.Bold)
+            painter.setFont(font)
+
+            # 绘制数字背景（圆形或矩形）
+            text = str(count) if count < 1000 else "999+"
+
+            # 计算文字大小
+            metrics = painter.fontMetrics()
+            text_width = metrics.horizontalAdvance(text)
+            text_height = metrics.height()
+
+            # 绘制半透明背景
+            bg_x = pixmap.width() - text_width - 8
+            bg_y = pixmap.height() - text_height - 4
+            bg_width = text_width + 8
+            bg_height = text_height + 4
+
+            painter.setBrush(QColor(255, 0, 0, 200))
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(bg_x, bg_y, bg_width, bg_height, 4, 4)
+
+            # 绘制白色数字
+            painter.setPen(QColor(255, 255, 255))
+            painter.drawText(
+                bg_x + 4,
+                bg_y + text_height - 4,
+                text
+            )
+
+            painter.end()
+
+        return QIcon(pixmap)
 
     def check_time_and_run(self):
         """检查时间，如果是整点01分则执行"""
@@ -247,7 +333,6 @@ class ScreenshotOrganizer(QSystemTrayIcon):
     def _check_for_existing_time_folders(self):
         """检查是否存在任何时间格式的文件夹"""
         try:
-            import re # Added this line
             if not self.screenshots_path.exists():
                 return False
             time_folder_pattern = re.compile(r'^\d{2}-\d{2}$')
