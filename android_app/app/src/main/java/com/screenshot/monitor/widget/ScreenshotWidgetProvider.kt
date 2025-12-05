@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.widget.RemoteViews
 import android.view.View
+import android.util.Log
 import com.screenshot.monitor.R
 import com.screenshot.monitor.api.ApiService
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets, Android SDK: ${android.os.Build.VERSION.SDK_INT}")
         // 对每个 widget 实例进行更新
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
@@ -29,29 +31,42 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        private const val TAG = "ScreenshotWidget"
+
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
+            Log.d(TAG, "updateAppWidget called for widget ID: $appWidgetId, Android SDK: ${android.os.Build.VERSION.SDK_INT}")
+
             // 在协程中执行网络请求
             CoroutineScope(Dispatchers.IO).launch {
                 try {
+                    // 使用 applicationContext 确保在所有 Android 版本上都能正确访问 SharedPreferences
+                    val appContext = context.applicationContext
+                    Log.d(TAG, "Using context: ${appContext.javaClass.simpleName}")
+
                     // 获取保存的 PC IP
-                    val sharedPref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                    val sharedPref = appContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
                     val pcIp = sharedPref.getString("pc_ip", "") ?: ""
+
+                    Log.d(TAG, "Retrieved PC IP from SharedPreferences: '$pcIp'")
 
                     if (pcIp.isEmpty()) {
                         // 如果没有设置 IP，显示提示
+                        Log.w(TAG, "PC IP is empty, showing no config widget")
                         withContext(Dispatchers.Main) {
-                            showNoConfigWidget(context, appWidgetManager, appWidgetId)
+                            showNoConfigWidget(appContext, appWidgetManager, appWidgetId)
                         }
                         return@launch
                     }
 
                     // 请求 API
-                    val apiService = ApiService(context)
+                    Log.d(TAG, "Starting API request to: $pcIp")
+                    val apiService = ApiService(appContext)
                     val response = apiService.getStatus(pcIp)
+                    Log.d(TAG, "API response received: ${response?.status ?: "null"}")
 
                     // 获取当前时间 - 分两行显示
                     val currentTime = Calendar.getInstance()
@@ -78,14 +93,43 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                             views.setViewVisibility(R.id.widget_status_image, View.VISIBLE)
                             views.setViewVisibility(R.id.widget_time_display_layout, View.GONE)
 
-                            // 加载 has.png 图片
+                            // 加载 has.png 图片 - 针对 Android 13 进行优化
                             try {
-                                val assetManager = context.assets
+                                val assetManager = appContext.assets
                                 val inputStream = assetManager.open("has.png")
-                                val bitmap = BitmapFactory.decodeStream(inputStream)
-                                views.setImageViewBitmap(R.id.widget_status_image, bitmap)
-                                inputStream.close()
+
+                                // 使用 BitmapFactory.Options 来压缩图片，避免超过 Android 13 的内存限制
+                                val options = BitmapFactory.Options().apply {
+                                    // 首先只读取图片尺寸，不加载到内存
+                                    inJustDecodeBounds = true
+                                    BitmapFactory.decodeStream(inputStream, null, this)
+                                    inputStream.close()
+
+                                    // 计算合适的采样率
+                                    // Widget 通常不需要超过 512x512 的图片
+                                    val maxSize = 512
+                                    inSampleSize = calculateInSampleSize(this, maxSize, maxSize)
+
+                                    // 现在真正加载图片
+                                    inJustDecodeBounds = false
+                                    // 使用 RGB_565 可以减少 50% 的内存使用（如果不需要透明度）
+                                    inPreferredConfig = android.graphics.Bitmap.Config.RGB_565
+                                }
+
+                                // 重新打开输入流加载压缩后的图片
+                                val compressedStream = assetManager.open("has.png")
+                                val bitmap = BitmapFactory.decodeStream(compressedStream, null, options)
+                                compressedStream.close()
+
+                                if (bitmap != null) {
+                                    Log.d(TAG, "Loaded bitmap: ${bitmap.width}x${bitmap.height}, size: ${bitmap.byteCount} bytes")
+                                    views.setImageViewBitmap(R.id.widget_status_image, bitmap)
+                                } else {
+                                    Log.w(TAG, "Failed to decode bitmap, using default icon")
+                                    views.setImageViewResource(R.id.widget_status_image, R.drawable.ic_launcher)
+                                }
                             } catch (e: Exception) {
+                                Log.e(TAG, "Error loading has.png: ${e.message}", e)
                                 // 如果加载失败，使用默认图标
                                 views.setImageViewResource(R.id.widget_status_image, R.drawable.ic_launcher)
                             }
@@ -114,13 +158,46 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                     }
 
                 } catch (e: Exception) {
+                    Log.e(TAG, "Error updating widget on Android ${android.os.Build.VERSION.SDK_INT}: ${e.message}", e)
                     e.printStackTrace()
                     // 出错时显示错误信息
                     withContext(Dispatchers.Main) {
-                        showErrorWidget(context, appWidgetManager, appWidgetId, e.message)
+                        val appContext = context.applicationContext
+                        showErrorWidget(appContext, appWidgetManager, appWidgetId, e.message)
                     }
                 }
             }
+        }
+
+        /**
+         * 计算合适的图片采样率，用于压缩大图片
+         * @param options BitmapFactory.Options，包含原始图片尺寸
+         * @param reqWidth 目标宽度
+         * @param reqHeight 目标高度
+         * @return 采样率（1, 2, 4, 8...）
+         */
+        private fun calculateInSampleSize(
+            options: BitmapFactory.Options,
+            reqWidth: Int,
+            reqHeight: Int
+        ): Int {
+            // 原始图片尺寸
+            val height = options.outHeight
+            val width = options.outWidth
+            var inSampleSize = 1
+
+            if (height > reqHeight || width > reqWidth) {
+                val halfHeight = height / 2
+                val halfWidth = width / 2
+
+                // 计算最大的 inSampleSize 值，该值是 2 的幂，并保持宽高都大于请求的宽高
+                while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                    inSampleSize *= 2
+                }
+            }
+
+            Log.d(TAG, "Original size: ${width}x${height}, Sample size: $inSampleSize, Target: ${reqWidth}x${reqHeight}")
+            return inSampleSize
         }
 
         private fun showNoConfigWidget(
