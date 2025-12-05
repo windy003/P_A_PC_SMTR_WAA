@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- 背景圆形 -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M24,24m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0"/>
+
+    <!-- 图片/监控图标 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,14h12v2h-12z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,18h20v14h-20z"/>
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M24,22m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+</vector>

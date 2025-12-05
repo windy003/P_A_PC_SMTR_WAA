@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(dir:*)",
-      "Bash(del \"D:\\files\\projects\\tmp\\create_icons.py\")"
+      "Bash(del \"D:\\files\\projects\\tmp\\create_icons.py\")",
+      "Bash(copy:*)",
+      "Bash(tree:*)",
+      "Bash(if not exist \"android_app\\app\\src\\main\\res\\xml\" mkdir \"android_app\\app\\src\\main\\res\\xml\")",
+      "Bash(mkdir:*)",
+      "Bash(python check_screenshots.py:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout 3)"
     ],
     "deny": [],
     "ask": []

@@ -42,15 +42,23 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             2000
         )
 
+        # 启动时仅自动检测文件夹并刷新图标
+        print("\n[启动检查] 自动检测文件夹状态并刷新图标...")
+        self.force_update_icon_status()
+
     def setup_tray(self):
         """设置系统托盘"""
         # 创建托盘菜单
         menu = QMenu()
 
         # 添加菜单项
-        manual_check_action = QAction("立即马上手动执行一次 (&L)", menu)
-        manual_check_action.triggered.connect(self.manual_execute)
-        menu.addAction(manual_check_action)
+        organize_action = QAction("立即整理旧截图 (&Z)", menu)
+        organize_action.triggered.connect(self.manual_execute)
+        menu.addAction(organize_action)
+
+        check_status_action = QAction("仅刷新图标状态 (&S)", menu)
+        check_status_action.triggered.connect(self.force_update_icon_status)
+        menu.addAction(check_status_action)
 
         menu.addSeparator()
 
@@ -112,6 +120,19 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             1000
         )
         self.check_and_organize()
+
+    def force_update_icon_status(self):
+        """仅检查文件夹状态并更新图标"""
+        print("\n[手动状态检测] 用户手动触发图标状态更新")
+        self.showMessage(
+            "状态检测",
+            "正在检查文件夹状态...",
+            QSystemTrayIcon.Information,
+            1000
+        )
+        final_status = self._check_for_existing_time_folders()
+        self.update_icon(final_status)
+        print(f"图标状态已更新为: {'有' if final_status else '无'}")
 
     def check_and_organize(self):
         """检查并整理图片"""
@@ -211,14 +232,32 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             else:
                 print("未找到符合条件的文件")
 
-            # 更新图标
-            self.update_icon(has_new_folder)
+            # 更新图标：改为检查是否存在任何时间文件夹来决定最终图标状态
+            print("\n正在根据文件夹存在情况更新最终图标状态...")
+            final_status = self._check_for_existing_time_folders()
+            print(f"图标状态检查结果: {'有' if final_status else '无'}")
+            self.update_icon(final_status)
 
         except Exception as e:
             print(f"检查过程出错: {e}")
             import traceback
             traceback.print_exc()
             self.update_icon(False)
+
+    def _check_for_existing_time_folders(self):
+        """检查是否存在任何时间格式的文件夹"""
+        try:
+            import re # Added this line
+            if not self.screenshots_path.exists():
+                return False
+            time_folder_pattern = re.compile(r'^\d{2}-\d{2}$')
+            for item in self.screenshots_path.iterdir():
+                if item.is_dir() and time_folder_pattern.match(item.name):
+                    return True  # 找到一个就够了
+            return False
+        except Exception as e:
+            print(f"检查时间文件夹时出错: {e}")
+            return False
 
     def open_screenshots_folder(self):
         """打开 Screenshots 文件夹"""

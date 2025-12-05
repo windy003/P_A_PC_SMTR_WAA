@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="4dp"
+    android:background="@drawable/widget_background">
+
+    <!-- 状态图片 (当状态为"有"时显示) -->
+    <ImageView
+        android:id="@+id/widget_status_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/status_image"
+        android:visibility="gone"
+        android:scaleType="fitCenter" />
+
+    <!-- 时间显示区域 (当状态为"无"时显示) -->
+    <LinearLayout
+        android:id="@+id/widget_time_display_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <TextView
+            android:id="@+id/widget_date_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12-5"
+            android:textSize="10sp"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/widget_hour_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5"
+                android:textSize="10sp"
+                android:textColor="#FF0000"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/widget_minute_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=":10"
+                android:textSize="10sp"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 最后更新时间 (小字) - 在小 Widget 中隐藏 -->
+    <TextView
+        android:id="@+id/widget_update_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text=""
+        android:textSize="6sp"
+        android:textColor="#999999"
+        android:visibility="gone" />
+
+</LinearLayout>

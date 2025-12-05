@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Screenshot Monitor</string>
+    <string name="widget_description">显示 PC 截图状态</string>
+    <string name="status_image">状态图片</string>
+    <string name="pc_ip_hint">IP 地址或 IP:端口 (如: 10.254.1.48:5001)</string>
+    <string name="save">保存</string>
+    <string name="settings_title">设置</string>
+    <string name="pc_ip_label">PC 服务器地址</string>
+</resources>
