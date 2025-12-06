@@ -23,16 +23,33 @@ class ApiService(private val context: Context) {
 
     fun getStatus(pcIp: String): StatusResponse? {
         return try {
-            // 智能处理端口号
-            val serverAddress = if (pcIp.contains(":")) {
-                // 已包含端口号，直接使用
-                pcIp
-            } else {
-                // 未包含端口号，添加默认端口 5001
-                "$pcIp:5001"
+            // 智能处理协议和端口号
+            val url = when {
+                // 如果已经包含 http:// 或 https://，直接使用并添加路径
+                pcIp.startsWith("http://", ignoreCase = true) ||
+                pcIp.startsWith("https://", ignoreCase = true) -> {
+                    // 移除末尾的斜杠（如果有）
+                    val baseUrl = pcIp.trimEnd('/')
+                    "$baseUrl/api/status"
+                }
+                // 如果是域名（包含点号但不是纯 IP），使用 HTTPS
+                pcIp.contains(".") && !pcIp.matches(Regex("^\\d+\\.\\d+\\.\\d+\\.\\d+.*")) -> {
+                    val serverAddress = if (pcIp.contains(":")) pcIp else pcIp
+                    "https://${serverAddress.trimEnd('/')}/api/status"
+                }
+                // 如果是局域网 IP 地址，使用 HTTP
+                else -> {
+                    val serverAddress = if (pcIp.contains(":")) {
+                        // 已包含端口号，直接使用
+                        pcIp
+                    } else {
+                        // 未包含端口号，添加默认端口 5001
+                        "$pcIp:5001"
+                    }
+                    "http://$serverAddress/api/status"
+                }
             }
 
-            val url = "http://$serverAddress/api/status"
             Log.d(TAG, "Requesting URL: $url on Android ${android.os.Build.VERSION.SDK_INT}")
 
             val request = Request.Builder()

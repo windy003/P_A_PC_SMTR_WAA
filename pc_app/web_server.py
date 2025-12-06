@@ -116,4 +116,5 @@ if __name__ == '__main__':
     print("API 端点: http://0.0.0.0:5001/api/status")
 
     # 运行服务器（监听所有网络接口，以便局域网访问）
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    # threaded=True: 启用多线程，支持多个客户端同时连接
+    app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)
