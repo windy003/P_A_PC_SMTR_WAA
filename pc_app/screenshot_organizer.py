@@ -24,8 +24,6 @@ class ScreenshotOrganizer(QSystemTrayIcon):
 
         # 项目目录（程序所在目录）
         self.project_dir = Path(__file__).parent
-        self.icon_has = self.project_dir / "有.png"
-        self.icon_none = self.project_dir / "无.png"
 
         # 初始化托盘图标
         self.setup_tray()
@@ -93,20 +91,8 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         # 统计总条目数
         total_count = self.count_total_items()
 
-        # 根据状态选择基础图标
-        if has_new_folder and self.icon_has.exists():
-            base_icon_path = self.icon_has
-        elif self.icon_none.exists():
-            base_icon_path = self.icon_none
-        else:
-            # 如果图标文件不存在，使用默认图标
-            self.setIcon(QApplication.style().standardIcon(
-                QApplication.style().SP_FileDialogInfoView
-            ))
-            return
-
         # 创建带数字的图标
-        icon_with_count = self.create_icon_with_count(base_icon_path, total_count)
+        icon_with_count = self.create_icon_with_count(has_new_folder, total_count)
         self.setIcon(icon_with_count)
 
         # 更新工具提示
@@ -134,17 +120,18 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             print(f"统计文件数时出错: {e}")
             return 0
 
-    def create_icon_with_count(self, base_icon_path, count):
+    def create_icon_with_count(self, has_new_folder, count):
         """创建带有数字的图标"""
-        # 加载基础图标
-        pixmap = QPixmap(str(base_icon_path))
-        if pixmap.isNull():
-            # 如果加载失败，创建一个默认图标
-            pixmap = QPixmap(64, 64)
-            pixmap.fill(QColor(200, 200, 200))
+        # 创建一个64x64的图标
+        pixmap = QPixmap(64, 64)
 
-        # 确保图标大小合适（系统托盘通常是 16x16 或 32x32）
-        pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # 根据状态选择背景颜色
+        if has_new_folder:
+            # 有新文件夹：橙色
+            pixmap.fill(QColor(255, 165, 0))
+        else:
+            # 无新文件夹：灰色
+            pixmap.fill(QColor(128, 128, 128))
 
         # 如果有条目，在图标上绘制数字
         if count > 0:
