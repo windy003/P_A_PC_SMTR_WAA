@@ -93,6 +93,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
                             // 显示 "PC有" 和数量
+                            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
                             views.setTextViewText(R.id.widget_date_text, "PC有")
                             views.setTextViewText(R.id.widget_hour_text, "${response.totalCount}")
                             views.setTextViewText(R.id.widget_minute_text, "个")
@@ -107,6 +108,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                             val hourPart = SimpleDateFormat("H", Locale.getDefault()).format(currentTime.time)
                             val minutePart = SimpleDateFormat(":mm", Locale.getDefault()).format(currentTime.time)
 
+                            views.setViewVisibility(R.id.widget_pc_text, View.VISIBLE)
                             views.setTextViewText(R.id.widget_date_text, datePart)
                             views.setTextViewText(R.id.widget_hour_text, hourPart)
                             views.setTextViewText(R.id.widget_minute_text, minutePart)
@@ -151,6 +153,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
 
             views.setViewVisibility(R.id.widget_status_image, View.GONE)
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
+            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
             views.setTextViewText(R.id.widget_date_text, "未配置") // Use date text for main message
             views.setTextViewText(R.id.widget_hour_text, "") // Clear hour
             views.setTextViewText(R.id.widget_minute_text, "") // Clear minute
@@ -178,6 +181,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
 
             views.setViewVisibility(R.id.widget_status_image, View.GONE)
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
+            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
             views.setTextViewText(R.id.widget_date_text, "连接失败") // Use date text for main message
             views.setTextViewText(R.id.widget_hour_text, "") // Clear hour
             views.setTextViewText(R.id.widget_minute_text, "") // Clear minute
