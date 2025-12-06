@@ -128,32 +128,31 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         # 背景改为全红色
         pixmap.fill(QColor(255, 0, 0))
 
-        # 如果有条目，在图标上绘制数字
-        if count > 0:
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
+        # 在图标上绘制数字（包括0）
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
 
-            # 设置字体
-            font = QFont("Arial", 32, QFont.Bold)
-            painter.setFont(font)
+        # 设置字体
+        font = QFont("Arial", 32, QFont.Bold)
+        painter.setFont(font)
 
-            # 绘制数字
-            text = str(count) if count < 1000 else "999+"
+        # 绘制数字
+        text = str(count) if count < 1000 else "999+"
 
-            # 计算文字大小，使其居中
-            metrics = painter.fontMetrics()
-            text_width = metrics.horizontalAdvance(text)
-            text_height = metrics.height()
+        # 计算文字大小，使其居中
+        metrics = painter.fontMetrics()
+        text_width = metrics.horizontalAdvance(text)
+        text_height = metrics.height()
 
-            # 计算居中位置
-            text_x = (pixmap.width() - text_width) // 2
-            text_y = (pixmap.height() + text_height) // 2 - metrics.descent()
+        # 计算居中位置
+        text_x = (pixmap.width() - text_width) // 2
+        text_y = (pixmap.height() + text_height) // 2 - metrics.descent()
 
-            # 绘制白色数字
-            painter.setPen(QColor(255, 255, 255))
-            painter.drawText(text_x, text_y, text)
+        # 绘制白色数字
+        painter.setPen(QColor(255, 255, 255))
+        painter.drawText(text_x, text_y, text)
 
-            painter.end()
+        painter.end()
 
         return QIcon(pixmap)
 
