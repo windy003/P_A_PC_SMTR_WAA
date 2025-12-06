@@ -125,13 +125,8 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         # 创建一个64x64的图标
         pixmap = QPixmap(64, 64)
 
-        # 根据状态选择背景颜色
-        if has_new_folder:
-            # 有新文件夹：橙色
-            pixmap.fill(QColor(255, 165, 0))
-        else:
-            # 无新文件夹：灰色
-            pixmap.fill(QColor(128, 128, 128))
+        # 背景改为全红色
+        pixmap.fill(QColor(255, 0, 0))
 
         # 如果有条目，在图标上绘制数字
         if count > 0:
@@ -142,31 +137,21 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             font = QFont("Arial", 32, QFont.Bold)
             painter.setFont(font)
 
-            # 绘制数字背景（圆形或矩形）
+            # 绘制数字
             text = str(count) if count < 1000 else "999+"
 
-            # 计算文字大小
+            # 计算文字大小，使其居中
             metrics = painter.fontMetrics()
             text_width = metrics.horizontalAdvance(text)
             text_height = metrics.height()
 
-            # 绘制半透明背景
-            bg_x = pixmap.width() - text_width - 8
-            bg_y = pixmap.height() - text_height - 4
-            bg_width = text_width + 8
-            bg_height = text_height + 4
-
-            painter.setBrush(QColor(255, 0, 0, 200))
-            painter.setPen(Qt.NoPen)
-            painter.drawRoundedRect(bg_x, bg_y, bg_width, bg_height, 4, 4)
+            # 计算居中位置
+            text_x = (pixmap.width() - text_width) // 2
+            text_y = (pixmap.height() + text_height) // 2 - metrics.descent()
 
             # 绘制白色数字
             painter.setPen(QColor(255, 255, 255))
-            painter.drawText(
-                bg_x + 4,
-                bg_y + text_height - 4,
-                text
-            )
+            painter.drawText(text_x, text_y, text)
 
             painter.end()
 
