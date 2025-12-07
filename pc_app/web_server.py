@@ -19,16 +19,16 @@ screenshots_path = home_dir / "OneDrive" / "图片" / "Screenshots"
 
 def check_has_folders():
     """
-    检查 Screenshots 目录中是否存在由 screenshot_organizer.py 创建的时间文件夹
+    检查 Screenshots 目录中是否存在由 screenshot_organizer.py 创建的文件夹
     返回: (has_folders, total_count)
-        has_folders: True (有时间文件夹) 或 False (无时间文件夹)
-        total_count: 所有时间文件夹中的文件总数
+        has_folders: True (有文件夹) 或 False (无文件夹)
+        total_count: 所有文件夹中的文件总数
     """
     try:
         if not screenshots_path.exists():
             return False, 0
 
-        # 查找符合时间格式的文件夹（如 "05-06", "14-15" 等）
+        # 查找符合时间格式的文件夹（如 "05-06", "14-15" 等）或 "已到期" 文件夹
         import re
         time_folder_pattern = re.compile(r'^\d{2}-\d{2}$')  # 匹配 "HH-HH" 格式
 
@@ -38,9 +38,9 @@ def check_has_folders():
         for item in screenshots_path.iterdir():
             # 检查是否是文件夹
             if item.is_dir():
-                # 检查文件夹名是否符合时间格式
-                if time_folder_pattern.match(item.name):
-                    print(f"发现时间文件夹: {item.name}")
+                # 检查文件夹名是否符合时间格式或是 "已到期" 文件夹
+                if time_folder_pattern.match(item.name) or item.name == "已到期":
+                    print(f"发现文件夹: {item.name}")
                     has_folders = True
 
                     # 统计该文件夹中的文件数量
@@ -70,7 +70,7 @@ def get_status():
     response = {
         "status": status,
         "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "message": f"有已整理的截图文件夹，共 {total_count} 个文件" if has_files else "无已整理的截图文件夹",
+        "message": f"有已整理的截图，共 {total_count} 个文件" if has_files else "无已整理的截图",
         "totalCount": total_count
     }
 

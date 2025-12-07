@@ -102,7 +102,7 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             self.setToolTip("Screenshots 自动整理工具\n每个整点01分自动执行")
 
     def count_total_items(self):
-        """统计所有时间文件夹中的文件总数"""
+        """统计所有时间文件夹和"已到期"文件夹中的文件总数"""
         try:
             if not self.screenshots_path.exists():
                 return 0
@@ -111,9 +111,11 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             total_count = 0
 
             for item in self.screenshots_path.iterdir():
-                if item.is_dir() and time_folder_pattern.match(item.name):
-                    folder_file_count = sum(1 for f in item.iterdir() if f.is_file())
-                    total_count += folder_file_count
+                if item.is_dir():
+                    # 统计旧的时间格式文件夹或新的"已到期"文件夹
+                    if time_folder_pattern.match(item.name) or item.name == "已到期":
+                        folder_file_count = sum(1 for f in item.iterdir() if f.is_file())
+                        total_count += folder_file_count
 
             return total_count
         except Exception as e:
@@ -207,10 +209,11 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             print(f"\n当前时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"检查3天前的图片 (早于: {three_days_ago.strftime('%Y-%m-%d %H:%M:%S')})")
 
-            # 查找符合条件的图片，按时间段分组
-            # 使用字典存储: {文件夹名: [(文件路径, 创建时间), ...]}
-            files_by_folder = {}
+            # 查找符合条件的图片，统一放到"已到期"文件夹
+            # 使用列表存储: [(文件路径, 创建时间), ...]
+            expired_files = []
             image_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
+            folder_name = "已到期"
 
             for file_path in self.screenshots_path.iterdir():
                 # 只处理文件，不处理文件夹
@@ -226,66 +229,43 @@ class ScreenshotOrganizer(QSystemTrayIcon):
 
                 # 检查是否是3天前或更早的文件
                 if creation_time < three_days_ago:
-                    # 计算该图片应该归档到哪个时间段
-                    # 获取图片创建时间的整点小时
-                    hour_start = creation_time.replace(minute=0, second=0, microsecond=0)
-                    hour_end = hour_start + timedelta(hours=1)
-
-                    # 创建文件夹名称（只保留时间段，Windows 不允许冒号）
-                    folder_name = f"{hour_start.strftime('%H')}-{hour_end.strftime('%H')}"
-
-                    # 将文件添加到对应的分组中
-                    if folder_name not in files_by_folder:
-                        files_by_folder[folder_name] = []
-
-                    files_by_folder[folder_name].append((file_path, creation_time))
+                    # 将所有到期文件添加到列表中
+                    expired_files.append((file_path, creation_time))
                     print(f"找到匹配文件: {file_path.name} (创建时间: {creation_time.strftime('%Y-%m-%d %H:%M:%S')}) -> {folder_name}")
 
             # 如果有符合条件的文件，创建文件夹并移动
             has_new_folder = False
             total_moved = 0
-            folder_count = len(files_by_folder)
 
-            if files_by_folder:
-                print(f"\n开始整理，共需创建 {folder_count} 个文件夹")
+            if expired_files:
+                print(f"\n开始整理，共找到 {len(expired_files)} 个到期文件")
 
-                # 遍历每个时间段分组
-                for folder_name, file_list in files_by_folder.items():
-                    target_folder = self.screenshots_path / folder_name
+                # 创建"已到期"文件夹
+                target_folder = self.screenshots_path / folder_name
+                target_folder.mkdir(exist_ok=True)
+                print(f"\n创建/使用文件夹: {folder_name}")
 
-                    # 创建文件夹
-                    target_folder.mkdir(exist_ok=True)
-                    print(f"\n创建文件夹: {folder_name}")
-
-                    # 移动该时间段的所有文件
-                    for file_path, creation_time in file_list:
-                        try:
-                            dest_path = target_folder / file_path.name
-                            shutil.move(str(file_path), str(dest_path))
-                            print(f"  移动文件: {file_path.name}")
-                            total_moved += 1
-                        except Exception as e:
-                            print(f"  移动文件失败 {file_path.name}: {e}")
+                # 移动所有到期文件
+                for file_path, creation_time in expired_files:
+                    try:
+                        dest_path = target_folder / file_path.name
+                        shutil.move(str(file_path), str(dest_path))
+                        print(f"  移动文件: {file_path.name}")
+                        total_moved += 1
+                    except Exception as e:
+                        print(f"  移动文件失败 {file_path.name}: {e}")
 
                 has_new_folder = True
 
                 # 显示通知
-                if folder_count == 1:
-                    self.showMessage(
-                        "截图已整理",
-                        f"已将 {total_moved} 个文件移动到文件夹:\n{list(files_by_folder.keys())[0]}",
-                        QSystemTrayIcon.Information,
-                        3000
-                    )
-                else:
-                    self.showMessage(
-                        "截图已整理",
-                        f"已整理 {total_moved} 个文件到 {folder_count} 个文件夹",
-                        QSystemTrayIcon.Information,
-                        3000
-                    )
+                self.showMessage(
+                    "截图已整理",
+                    f"已将 {total_moved} 个文件移动到'{folder_name}'文件夹",
+                    QSystemTrayIcon.Information,
+                    3000
+                )
 
-                print(f"\n整理完成！共移动 {total_moved} 个文件到 {folder_count} 个文件夹")
+                print(f"\n整理完成！共移动 {total_moved} 个文件到'{folder_name}'文件夹")
             else:
                 print("未找到符合条件的文件")
 
@@ -302,14 +282,16 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             self.update_icon(False)
 
     def _check_for_existing_time_folders(self):
-        """检查是否存在任何时间格式的文件夹"""
+        """检查是否存在任何时间格式的文件夹或"已到期"文件夹"""
         try:
             if not self.screenshots_path.exists():
                 return False
             time_folder_pattern = re.compile(r'^\d{2}-\d{2}$')
             for item in self.screenshots_path.iterdir():
-                if item.is_dir() and time_folder_pattern.match(item.name):
-                    return True  # 找到一个就够了
+                if item.is_dir():
+                    # 检查是否是旧的时间格式文件夹或新的"已到期"文件夹
+                    if time_folder_pattern.match(item.name) or item.name == "已到期":
+                        return True  # 找到一个就够了
             return False
         except Exception as e:
             print(f"检查时间文件夹时出错: {e}")
@@ -334,7 +316,7 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             "Screenshots 自动整理工具\n\n"
             "自动检测并整理 OneDrive Screenshots 文件夹中的图片\n"
             "每个整点01分自动检查一次\n\n"
-            "功能：将3天前同一时段的截图归档到对应文件夹"
+            "功能：将3天前的截图统一归档到'已到期'文件夹"
         )
 
     def quit_app(self):
