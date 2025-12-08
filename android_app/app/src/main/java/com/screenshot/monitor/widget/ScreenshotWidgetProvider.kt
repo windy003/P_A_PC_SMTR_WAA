@@ -87,8 +87,8 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                         )
                         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
-                        if (response != null && response.status == "has") {
-                            // 状态为"有"：显示文字 "PC有 + 数量"
+                        if (response != null && response.status == "has" && response.totalCount > 0) {
+                            // 状态为"有"且数量大于0：显示文字 "PC有 + 数量"
                             views.setViewVisibility(R.id.widget_status_image, View.GONE)
                             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
