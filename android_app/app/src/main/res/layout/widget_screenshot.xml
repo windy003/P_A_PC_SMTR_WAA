@@ -21,7 +21,8 @@
     <LinearLayout
         android:id="@+id/widget_time_display_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:orientation="vertical"
         android:gravity="center"
         android:visibility="visible">
@@ -29,38 +30,33 @@
         <TextView
             android:id="@+id/widget_pc_text"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:text="PC"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="6sp"
-            android:autoSizeMaxTextSize="15sp"
-            android:autoSizeStepGranularity="1sp"
+            android:textSize="10sp"
             android:maxLines="1"
             android:textColor="#FF0000"
             android:textStyle="bold"
             android:gravity="center"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:includeFontPadding="false"
+            android:padding="0dp" />
 
         <TextView
             android:id="@+id/widget_date_text"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:text="12-5"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="6sp"
-            android:autoSizeMaxTextSize="15sp"
-            android:autoSizeStepGranularity="1sp"
+            android:textSize="9sp"
             android:maxLines="1"
             android:textColor="#333333"
             android:textStyle="bold"
-            android:gravity="center" />
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="0dp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="horizontal"
             android:gravity="center">
@@ -68,12 +64,9 @@
             <TextView
                 android:id="@+id/widget_hour_text"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:text="5"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="6sp"
-                android:autoSizeMaxTextSize="15sp"
-                android:autoSizeStepGranularity="1sp"
+                android:textSize="9sp"
                 android:maxLines="1"
                 android:textColor="#FF0000"
                 android:textStyle="bold"
@@ -84,12 +77,9 @@
             <TextView
                 android:id="@+id/widget_minute_text"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:text=":10"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="4sp"
-                android:autoSizeMaxTextSize="10sp"
-                android:autoSizeStepGranularity="1sp"
+                android:textSize="7sp"
                 android:maxLines="1"
                 android:textColor="#333333"
                 android:textStyle="bold"
@@ -99,19 +89,18 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 最后更新时间 (小字) - 在小 Widget 中隐藏 -->
+    <!-- 最后更新时间 (小字) -->
     <TextView
         android:id="@+id/widget_update_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="0dp"
+        android:paddingTop="1dp"
+        android:paddingBottom="2dp"
         android:text=""
-        android:autoSizeTextType="uniform"
-        android:autoSizeMinTextSize="3sp"
-        android:autoSizeMaxTextSize="6sp"
-        android:autoSizeStepGranularity="1sp"
+        android:textSize="6sp"
         android:maxLines="1"
-        android:textColor="#999999"
+        android:textColor="#333333"
         android:gravity="center"
         android:visibility="gone" />
 

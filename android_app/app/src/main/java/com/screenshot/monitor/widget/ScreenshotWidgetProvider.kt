@@ -14,6 +14,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.Spanned
 
 class ScreenshotWidgetProvider : AppWidgetProvider() {
 
@@ -72,6 +75,9 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                     val dateFormat = SimpleDateFormat("M-d", Locale.getDefault())
                     val timeFormat = SimpleDateFormat("H:mm", Locale.getDefault())
                     val timeString = "${dateFormat.format(currentTime.time)}\n${timeFormat.format(currentTime.time)}"
+                    // 单行时间格式，用于 PC有 的情况
+                    val singleLineTimeFormat = SimpleDateFormat("M-d H:mm", Locale.getDefault())
+                    val singleLineTime = singleLineTimeFormat.format(currentTime.time)
 
                     // 更新 widget UI
                     withContext(Dispatchers.Main) {
@@ -97,7 +103,23 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                             views.setTextViewText(R.id.widget_date_text, "PC有")
                             views.setTextViewText(R.id.widget_hour_text, "${response.totalCount}")
                             views.setTextViewText(R.id.widget_minute_text, "个")
-                            views.setTextViewText(R.id.widget_update_time, "最后检查: $timeString")
+                            // 显示检查时间（单行格式），小时部分为红色
+                            views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
+
+                            // 创建 SpannableString，将小时部分设置为红色
+                            val spannableTime = SpannableString(singleLineTime)
+                            val spaceIndex = singleLineTime.indexOf(' ')
+                            val colonIndex = singleLineTime.indexOf(':', spaceIndex)
+                            if (spaceIndex != -1 && colonIndex != -1) {
+                                // 小时部分是从空格后到冒号前
+                                spannableTime.setSpan(
+                                    ForegroundColorSpan(0xFFFF0000.toInt()),
+                                    spaceIndex + 1,
+                                    colonIndex,
+                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                            }
+                            views.setTextViewText(R.id.widget_update_time, spannableTime)
                         } else {
                             // 状态为"无"：显示时间
                             views.setViewVisibility(R.id.widget_status_image, View.GONE)
