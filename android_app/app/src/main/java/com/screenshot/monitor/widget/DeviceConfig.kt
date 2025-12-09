@@ -51,10 +51,10 @@ object DeviceConfig {
     // 小米 Mix Fold 2 配置
     private val XIAOMI_MIX_FOLD_2_CONFIG = WidgetStyleConfig(
         pcTextSize = 12f,
-        dateTextSize = 11f,
-        hourTextSize = 11f,
-        minuteTextSize = 9f,
-        updateTimeSize = 7f,
+        dateTextSize = 12f,
+        hourTextSize = 12f,
+        minuteTextSize = 12f,
+        updateTimeSize = 12f,
         widgetPadding = 6
     )
 
