@@ -12,7 +12,9 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.screenshot.monitor.api.ApiService
 import com.screenshot.monitor.widget.ScreenshotWidgetProvider
+import com.screenshot.monitor.widget.DeviceConfig
 import com.screenshot.monitor.worker.UpdateWorker
+import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var editPcIp: EditText
     private lateinit var btnSave: Button
     private lateinit var textStatus: TextView
+    private lateinit var textDeviceInfo: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +38,10 @@ class MainActivity : AppCompatActivity() {
         editPcIp = findViewById(R.id.edit_pc_ip)
         btnSave = findViewById(R.id.btn_save)
         textStatus = findViewById(R.id.text_status)
+        textDeviceInfo = findViewById(R.id.text_device_info)
+
+        // 显示设备信息
+        displayDeviceInfo()
 
         // 加载保存的 IP
         val sharedPref = getSharedPreferences("settings", MODE_PRIVATE)
@@ -184,5 +191,25 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun displayDeviceInfo() {
+        val deviceConfig = DeviceConfig.getDeviceConfig()
+        val deviceInfo = """
+            |制造商: ${Build.MANUFACTURER}
+            |型号: ${Build.MODEL}
+            |品牌: ${Build.BRAND}
+            |产品: ${Build.PRODUCT}
+            |Android版本: ${Build.VERSION.RELEASE}
+            |
+            |当前小部件配置:
+            |  PC文字: ${deviceConfig.pcTextSize}sp
+            |  日期文字: ${deviceConfig.dateTextSize}sp
+            |  小时文字: ${deviceConfig.hourTextSize}sp
+            |  分钟文字: ${deviceConfig.minuteTextSize}sp
+            |  更新时间: ${deviceConfig.updateTimeSize}sp
+        """.trimMargin()
+
+        textDeviceInfo.text = deviceInfo
     }
 }

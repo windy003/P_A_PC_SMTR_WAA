@@ -70,14 +70,17 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                     val response = apiService.getStatus(pcIp)
                     Log.d(TAG, "API response received: ${response?.status ?: "null"}")
 
-                    // 获取当前时间 - 分两行显示
+                    // 获取当前时间
                     val currentTime = Calendar.getInstance()
                     val dateFormat = SimpleDateFormat("M-d", Locale.getDefault())
                     val timeFormat = SimpleDateFormat("H:mm", Locale.getDefault())
                     val timeString = "${dateFormat.format(currentTime.time)}\n${timeFormat.format(currentTime.time)}"
-                    // 单行时间格式，用于 PC有 的情况
-                    val singleLineTimeFormat = SimpleDateFormat("M-d H:mm", Locale.getDefault())
-                    val singleLineTime = singleLineTimeFormat.format(currentTime.time)
+                    // 两行时间格式，用于显示检查时间
+                    val twoLineTime = "${dateFormat.format(currentTime.time)}\n${timeFormat.format(currentTime.time)}"
+
+                    // 获取设备配置
+                    val deviceConfig = DeviceConfig.getDeviceConfig()
+                    Log.d(TAG, "设备配置: ${DeviceConfig.getDeviceInfo()}")
 
                     // 更新 widget UI
                     withContext(Dispatchers.Main) {
@@ -93,35 +96,50 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                         )
                         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
-                        if (response != null && response.status == "has" && response.totalCount > 0) {
-                            // 状态为"有"且数量大于0：显示文字 "PC有 + 数量"
+                        if (response != null) {
+                            // 成功获取到响应：显示 "PC X个 + 日期 + 时间"
                             views.setViewVisibility(R.id.widget_status_image, View.GONE)
                             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
-                            // 显示 "PC有" 和数量
-                            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
-                            views.setTextViewText(R.id.widget_date_text, "PC有")
-                            views.setTextViewText(R.id.widget_hour_text, "${response.totalCount}")
-                            views.setTextViewText(R.id.widget_minute_text, "个")
-                            // 显示检查时间（单行格式），小时部分为红色
+                            // 显示 "PC" + 数量 + "个"
+                            views.setViewVisibility(R.id.widget_pc_text, View.VISIBLE)
+                            views.setTextViewText(R.id.widget_pc_text, "PC")
+                            views.setTextViewText(R.id.widget_date_text, "${response.totalCount}")
+                            views.setTextViewText(R.id.widget_hour_text, "个")
+
+                            // 设置文字颜色: PC和"个"为绿色，数量为红色
+                            views.setTextColor(R.id.widget_pc_text, 0xFF00AA00.toInt())      // 绿色
+                            views.setTextColor(R.id.widget_date_text, 0xFFFF0000.toInt())    // 红色
+                            views.setTextColor(R.id.widget_hour_text, 0xFF00AA00.toInt())    // 绿色
+
+                            // 应用设备配置的字体大小
+                            views.setTextViewTextSize(R.id.widget_pc_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.pcTextSize)
+                            views.setTextViewTextSize(R.id.widget_date_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.dateTextSize)
+                            views.setTextViewTextSize(R.id.widget_hour_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.hourTextSize)
+
+                            // 隐藏分钟文本（不需要显示）
+                            views.setViewVisibility(R.id.widget_minute_text, View.GONE)
+
+                            // 显示检查时间（两行格式：日期换行时间），小时部分为红色
                             views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
 
                             // 创建 SpannableString，将小时部分设置为红色
-                            val spannableTime = SpannableString(singleLineTime)
-                            val spaceIndex = singleLineTime.indexOf(' ')
-                            val colonIndex = singleLineTime.indexOf(':', spaceIndex)
-                            if (spaceIndex != -1 && colonIndex != -1) {
-                                // 小时部分是从空格后到冒号前
+                            val spannableTime = SpannableString(twoLineTime)
+                            val newlineIndex = twoLineTime.indexOf('\n')
+                            val colonIndex = twoLineTime.indexOf(':', newlineIndex)
+                            if (newlineIndex != -1 && colonIndex != -1) {
+                                // 小时部分是从换行符后到冒号前
                                 spannableTime.setSpan(
                                     ForegroundColorSpan(0xFFFF0000.toInt()),
-                                    spaceIndex + 1,
+                                    newlineIndex + 1,
                                     colonIndex,
                                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                                 )
                             }
                             views.setTextViewText(R.id.widget_update_time, spannableTime)
+                            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
                         } else {
-                            // 状态为"无"：显示时间
+                            // 无法获取响应（连接失败等）：显示当前时间
                             views.setViewVisibility(R.id.widget_status_image, View.GONE)
                             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
@@ -131,10 +149,20 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                             val minutePart = SimpleDateFormat(":mm", Locale.getDefault()).format(currentTime.time)
 
                             views.setViewVisibility(R.id.widget_pc_text, View.VISIBLE)
+                            views.setTextViewText(R.id.widget_pc_text, "PC")
                             views.setTextViewText(R.id.widget_date_text, datePart)
                             views.setTextViewText(R.id.widget_hour_text, hourPart)
+                            views.setViewVisibility(R.id.widget_minute_text, View.VISIBLE)
                             views.setTextViewText(R.id.widget_minute_text, minutePart)
+                            views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
                             views.setTextViewText(R.id.widget_update_time, "上次检查时间")
+
+                            // 应用设备配置的字体大小
+                            views.setTextViewTextSize(R.id.widget_pc_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.pcTextSize)
+                            views.setTextViewTextSize(R.id.widget_date_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.dateTextSize)
+                            views.setTextViewTextSize(R.id.widget_hour_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.hourTextSize)
+                            views.setTextViewTextSize(R.id.widget_minute_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.minuteTextSize)
+                            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
                         }
 
                         // 保存最后检查时间

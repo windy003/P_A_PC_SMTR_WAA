@@ -17,7 +17,7 @@
         android:visibility="gone"
         android:scaleType="fitCenter" />
 
-    <!-- 时间显示区域 (当状态为"无"时显示) -->
+    <!-- 时间显示区域 -->
     <LinearLayout
         android:id="@+id/widget_time_display_layout"
         android:layout_width="match_parent"
@@ -27,39 +27,40 @@
         android:gravity="center"
         android:visibility="visible">
 
-        <TextView
-            android:id="@+id/widget_pc_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="PC"
-            android:textSize="10sp"
-            android:maxLines="1"
-            android:textColor="#FF0000"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:visibility="gone"
-            android:includeFontPadding="false"
-            android:padding="0dp" />
-
-        <TextView
-            android:id="@+id/widget_date_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="12-5"
-            android:textSize="9sp"
-            android:maxLines="1"
-            android:textColor="#333333"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:padding="0dp" />
-
+        <!-- PC X个 显示在同一行 -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="horizontal"
             android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_pc_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PC"
+                android:textSize="10sp"
+                android:maxLines="1"
+                android:textColor="#FF0000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:visibility="visible"
+                android:includeFontPadding="false"
+                android:padding="0dp" />
+
+            <TextView
+                android:id="@+id/widget_date_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12-5"
+                android:textSize="9sp"
+                android:maxLines="1"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:padding="0dp" />
 
             <TextView
                 android:id="@+id/widget_hour_text"
@@ -87,21 +88,22 @@
                 android:padding="0dp"
                 android:includeFontPadding="false" />
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- 最后更新时间 (小字) -->
-    <TextView
-        android:id="@+id/widget_update_time"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="0dp"
-        android:paddingTop="1dp"
-        android:paddingBottom="2dp"
-        android:text=""
-        android:textSize="6sp"
-        android:maxLines="1"
-        android:textColor="#333333"
-        android:gravity="center"
-        android:visibility="gone" />
+        <!-- 最后更新时间 -->
+        <TextView
+            android:id="@+id/widget_update_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
+            android:text="测试时间"
+            android:textSize="7sp"
+            android:maxLines="2"
+            android:textColor="#333333"
+            android:textStyle="normal"
+            android:gravity="center"
+            android:visibility="visible" />
+    </LinearLayout>
 
 </LinearLayout>
