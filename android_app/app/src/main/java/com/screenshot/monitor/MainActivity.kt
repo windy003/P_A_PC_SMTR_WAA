@@ -86,23 +86,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun schedulePeriodicUpdate() {
-        // 计算到下一个 10 分的延迟时间
-        val calendar = Calendar.getInstance()
-        val currentMinute = calendar.get(Calendar.MINUTE)
-
-        // 计算初始延迟
-        val initialDelayMinutes = if (currentMinute < 10) {
-            10 - currentMinute
-        } else {
-            60 - currentMinute + 10
-        }
-
-        // 创建每小时执行一次的定期任务
+        // 创建每5分钟执行一次的定期任务
         val updateRequest = PeriodicWorkRequestBuilder<UpdateWorker>(
-            1, TimeUnit.HOURS,  // 每小时执行一次
-            15, TimeUnit.MINUTES  // 灵活窗口期 15 分钟
+            5, TimeUnit.MINUTES  // 每5分钟执行一次
         )
-            .setInitialDelay(initialDelayMinutes.toLong(), TimeUnit.MINUTES)
             .build()
 
         // 使用 REPLACE 策略，如果已存在则替换
@@ -158,7 +145,7 @@ class MainActivity : AppCompatActivity() {
                             |服务器时间: ${response.timestamp}
                             |
                             |本地时间: $timeString
-                            |Widget 将在每小时 10 分自动检查状态
+                            |Widget 将每 5 分钟自动检查状态
                         """.trimMargin()
 
                         // 成功获取状态后，立即更新 Widget
