@@ -28,15 +28,15 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         # 初始化托盘图标
         self.setup_tray()
 
-        # 设置定时器，每5分钟检查一次
+        # 设置定时器，每1分钟检查一次
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_time_and_run)
-        self.timer.start(300000)  # 300000 毫秒 = 5 分钟
+        self.timer.start(60000)  # 60000 毫秒 = 1 分钟
 
         # 程序启动时显示提示
         self.showMessage(
             "截图整理工具已启动",
-            "将每5分钟自动整理截图",
+            "将每1分钟自动整理截图",
             QSystemTrayIcon.Information,
             2000
         )
@@ -81,7 +81,7 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         self.update_icon(False)
 
         # 设置工具提示
-        self.setToolTip("Screenshots 自动整理工具\n每5分钟自动执行")
+        self.setToolTip("Screenshots 自动整理工具\n每1分钟自动执行")
 
         # 显示托盘图标
         self.show()
@@ -97,9 +97,9 @@ class ScreenshotOrganizer(QSystemTrayIcon):
 
         # 更新工具提示
         if total_count > 0:
-            self.setToolTip(f"Screenshots 自动整理工具\nPC有 {total_count} 个文件\n每5分钟自动执行")
+            self.setToolTip(f"Screenshots 自动整理工具\nPC有 {total_count} 个文件\n每1分钟自动执行")
         else:
-            self.setToolTip("Screenshots 自动整理工具\n每5分钟自动执行")
+            self.setToolTip("Screenshots 自动整理工具\n每1分钟自动执行")
 
     def count_total_items(self):
         """统计所有时间文件夹和"已到期"文件夹中的文件总数"""
@@ -159,7 +159,7 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         return QIcon(pixmap)
 
     def check_time_and_run(self):
-        """每5分钟执行一次检查"""
+        """每1分钟执行一次检查"""
         now = datetime.now()
         print(f"\n[定时执行] 当前时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
         self.check_and_organize()
@@ -310,7 +310,7 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             "关于",
             "Screenshots 自动整理工具\n\n"
             "自动检测并整理 OneDrive Screenshots 文件夹中的图片\n"
-            "每5分钟自动检查一次\n\n"
+            "每1分钟自动检查一次\n\n"
             "功能：将3天前的截图统一归档到'已到期'文件夹"
         )
 

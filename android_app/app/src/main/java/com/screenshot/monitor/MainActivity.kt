@@ -86,9 +86,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun schedulePeriodicUpdate() {
-        // 创建每5分钟执行一次的定期任务
+        // 创建每1分钟执行一次的定期任务
         val updateRequest = PeriodicWorkRequestBuilder<UpdateWorker>(
-            5, TimeUnit.MINUTES  // 每5分钟执行一次
+            1, TimeUnit.MINUTES  // 每1分钟执行一次
         )
             .build()
 
@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
                             |服务器时间: ${response.timestamp}
                             |
                             |本地时间: $timeString
-                            |Widget 将每 5 分钟自动检查状态
+                            |Widget 将每 1 分钟自动检查状态
                         """.trimMargin()
 
                         // 成功获取状态后，立即更新 Widget

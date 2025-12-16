@@ -15,7 +15,7 @@ class UpdateWorker(
 
     override fun doWork(): Result {
         return try {
-            // 每5分钟更新一次所有 widget 实例
+            // 每1分钟更新一次所有 widget 实例
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(
                 ComponentName(context, ScreenshotWidgetProvider::class.java)
