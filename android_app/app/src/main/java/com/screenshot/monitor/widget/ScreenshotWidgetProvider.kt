@@ -94,7 +94,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                 // 数字部分显示为红色
                 val countText = String.format(
                     Locale.getDefault(),
-                    "PC <font color='#FF0000'>%d</font> 个",
+                    "<b>PC <font color='#FF0000'>%d</font> 个</b>",
                     cachedCount
                 )
                 views.setTextViewText(
