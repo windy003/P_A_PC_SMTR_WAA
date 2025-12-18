@@ -43,8 +43,8 @@ object DeviceConfig {
         pcTextSize = 10f,       // 适中大小，清晰可读
         dateTextSize = 10f,
         hourTextSize = 10f,
-        minuteTextSize = 10f,
-        updateTimeSize = 10f,
+        minuteTextSize = 8f,
+        updateTimeSize = 8f,
         widgetPadding = 4
     )
 
