@@ -15,7 +15,8 @@
       "Bash(taskkill:*)",
       "Bash(timeout 3)",
       "Bash(ipconfig:*)",
-      "Bash(netsh advfirewall firewall show rule:*)"
+      "Bash(netsh advfirewall firewall show rule:*)",
+      "Bash(gradlew.bat build:*)"
     ],
     "deny": [],
     "ask": []

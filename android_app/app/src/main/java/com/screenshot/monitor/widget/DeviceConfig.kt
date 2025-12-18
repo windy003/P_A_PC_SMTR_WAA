@@ -28,19 +28,19 @@ object DeviceConfig {
         widgetPadding = 4
     )
 
-    // LG Wing 配置
+    // LG Wing 配置（参考 A_gallery_TR_BOH 项目优化）
     private val LG_WING_CONFIG = WidgetStyleConfig(
-        pcTextSize = 15f,
-        dateTextSize = 15f,
-        hourTextSize = 15f,
-        minuteTextSize = 15f,
-        updateTimeSize = 15f,
+        pcTextSize = 17f,       // 增大字体以适应 LG Wing 屏幕
+        dateTextSize = 17f,
+        hourTextSize = 17f,
+        minuteTextSize = 17f,
+        updateTimeSize = 17f,
         widgetPadding = 5
     )
 
-    // 小米 12 Pro 配置
+    // 小米 12 Pro 配置（参考 A_gallery_TR_BOH 项目优化）
     private val XIAOMI_12_PRO_CONFIG = WidgetStyleConfig(
-        pcTextSize = 10f,
+        pcTextSize = 10f,       // 适中大小，清晰可读
         dateTextSize = 10f,
         hourTextSize = 10f,
         minuteTextSize = 10f,
@@ -48,13 +48,13 @@ object DeviceConfig {
         widgetPadding = 4
     )
 
-    // 小米 Mix Fold 2 配置
+    // 小米 Mix Fold 2 配置（参考 A_gallery_TR_BOH 项目优化）
     private val XIAOMI_MIX_FOLD_2_CONFIG = WidgetStyleConfig(
-        pcTextSize = 12f,
-        dateTextSize = 12f,
-        hourTextSize = 12f,
-        minuteTextSize = 12f,
-        updateTimeSize = 12f,
+        pcTextSize = 15f,       // 折叠屏幕更大，使用更大字体
+        dateTextSize = 15f,
+        hourTextSize = 15f,
+        minuteTextSize = 15f,
+        updateTimeSize = 15f,
         widgetPadding = 6
     )
 

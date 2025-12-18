@@ -7,13 +7,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.screenshot.monitor.api.ApiService
 import com.screenshot.monitor.widget.ScreenshotWidgetProvider
 import com.screenshot.monitor.widget.DeviceConfig
-import com.screenshot.monitor.worker.UpdateWorker
 import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +18,6 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -61,8 +56,8 @@ class MainActivity : AppCompatActivity() {
                 // 保存 IP
                 sharedPref.edit().putString("pc_ip", pcIp).apply()
 
-                // 调度定时任务
-                schedulePeriodicUpdate()
+                // 启动每分钟的定时更新（Widget 会自动管理）
+                ScreenshotWidgetProvider.startAutoUpdate(this)
 
                 // 立即更新 widget
                 updateWidget()
@@ -83,21 +78,6 @@ class MainActivity : AppCompatActivity() {
         if (!savedIp.isNullOrEmpty()) {
             fetchAndDisplayStatus(savedIp)
         }
-    }
-
-    private fun schedulePeriodicUpdate() {
-        // 创建每1分钟执行一次的定期任务
-        val updateRequest = PeriodicWorkRequestBuilder<UpdateWorker>(
-            1, TimeUnit.MINUTES  // 每1分钟执行一次
-        )
-            .build()
-
-        // 使用 REPLACE 策略，如果已存在则替换
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "screenshot_update",
-            ExistingPeriodicWorkPolicy.UPDATE,
-            updateRequest
-        )
     }
 
     private fun updateWidget() {
