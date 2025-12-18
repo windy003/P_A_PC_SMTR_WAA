@@ -50,10 +50,10 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             val minute = currentTime.get(Calendar.MINUTE)
 
             // 使用 HTML 格式实现多颜色显示
-            // 日期：绿色，分钟：红色
+            // 日期时间单行显示：日期和时间用空格分隔
             val dateTimeDisplay = String.format(
                 Locale.getDefault(),
-                "<font color='#00FF00'>%d-%d</font><br/><font color='#00FF00'>%d:</font><font color='#FF0000'>%02d</font>",
+                "<font color='#00FF00'>%d-%d</font> <font color='#00FF00'>%d:</font><font color='#FF0000'>%02d</font>",
                 month, day, hour, minute
             )
 

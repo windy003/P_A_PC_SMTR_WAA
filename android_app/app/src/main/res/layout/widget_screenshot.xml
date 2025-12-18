@@ -27,13 +27,45 @@
         android:gravity="center"
         android:visibility="visible">
 
-        <!-- PC X个 显示在同一行 -->
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <!-- PC X个 显示在第一行 -->
+        <TextView
+            android:id="@+id/widget_update_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
+            android:text="PC 3个"
+            android:textSize="7sp"
+            android:maxLines="1"
+            android:textColor="#333333"
+            android:textStyle="normal"
+            android:gravity="center"
+            android:visibility="visible" />
+
+        <!-- 日期时间显示在第二行 -->
+        <TextView
+            android:id="@+id/widget_date_text"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:text="12-18 12:09"
+            android:textSize="12sp"
+            android:maxLines="2"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="0dp" />
+
+        <!-- 隐藏的备用控件 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/widget_pc_text"
@@ -45,20 +77,7 @@
                 android:textColor="#FF0000"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:visibility="visible"
-                android:includeFontPadding="false"
-                android:padding="0dp" />
-
-            <TextView
-                android:id="@+id/widget_date_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="12-5\n22:22"
-                android:textSize="12sp"
-                android:maxLines="2"
-                android:textColor="#333333"
-                android:textStyle="bold"
-                android:gravity="center"
+                android:visibility="gone"
                 android:includeFontPadding="false"
                 android:padding="0dp" />
 
@@ -73,7 +92,8 @@
                 android:textStyle="bold"
                 android:gravity="center"
                 android:padding="0dp"
-                android:includeFontPadding="false" />
+                android:includeFontPadding="false"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/widget_minute_text"
@@ -86,24 +106,9 @@
                 android:textStyle="bold"
                 android:gravity="center"
                 android:padding="0dp"
-                android:includeFontPadding="false" />
+                android:includeFontPadding="false"
+                android:visibility="gone" />
         </LinearLayout>
-
-        <!-- 最后更新时间 -->
-        <TextView
-            android:id="@+id/widget_update_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:paddingTop="1dp"
-            android:paddingBottom="1dp"
-            android:text="测试时间"
-            android:textSize="7sp"
-            android:maxLines="2"
-            android:textColor="#333333"
-            android:textStyle="normal"
-            android:gravity="center"
-            android:visibility="visible" />
     </LinearLayout>
 
 </LinearLayout>
