@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="4dp"
+    android:background="@drawable/widget_background">
+
+    <!-- 状态图片 (当状态为"有"时显示) -->
+    <ImageView
+        android:id="@+id/widget_status_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/status_image"
+        android:visibility="gone"
+        android:scaleType="fitCenter" />
+
+    <!-- 时间显示区域 -->
+    <LinearLayout
+        android:id="@+id/widget_time_display_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <!-- PC X个 显示在第一行 - 华为 Mate XT 专用大字体 -->
+        <TextView
+            android:id="@+id/widget_update_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:text="PC 3个"
+            android:textSize="20sp"
+            android:maxLines="1"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:visibility="visible" />
+
+        <!-- 日期时间显示在第二行 - 华为 Mate XT 专用大字体 -->
+        <TextView
+            android:id="@+id/widget_date_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="12-18 12:09"
+            android:textSize="20sp"
+            android:maxLines="2"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="0dp" />
+
+        <!-- 隐藏的备用控件 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/widget_pc_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PC"
+                android:textSize="10sp"
+                android:maxLines="1"
+                android:textColor="#FF0000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:visibility="gone"
+                android:includeFontPadding="false"
+                android:padding="0dp" />
+
+            <TextView
+                android:id="@+id/widget_hour_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5"
+                android:textSize="9sp"
+                android:maxLines="1"
+                android:textColor="#FF0000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:padding="0dp"
+                android:includeFontPadding="false"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/widget_minute_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=":10"
+                android:textSize="7sp"
+                android:maxLines="1"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:padding="0dp"
+                android:includeFontPadding="false"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
