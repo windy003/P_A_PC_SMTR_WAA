@@ -8,15 +8,6 @@
     android:padding="4dp"
     android:background="@drawable/widget_background">
 
-    <!-- 状态图片 (当状态为"有"时显示) -->
-    <ImageView
-        android:id="@+id/widget_status_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:contentDescription="@string/status_image"
-        android:visibility="gone"
-        android:scaleType="fitCenter" />
-
     <!-- 时间显示区域 -->
     <LinearLayout
         android:id="@+id/widget_time_display_layout"

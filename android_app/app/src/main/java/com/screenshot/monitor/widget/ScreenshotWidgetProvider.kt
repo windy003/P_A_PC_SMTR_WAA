@@ -71,7 +71,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
-            views.setViewVisibility(R.id.widget_status_image, View.GONE)
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
             // 隐藏PC文字，使用date_text显示日期和时间（换行）
@@ -189,7 +188,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
-            views.setViewVisibility(R.id.widget_status_image, View.GONE)
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
             views.setViewVisibility(R.id.widget_pc_text, View.GONE)
             views.setTextViewText(R.id.widget_date_text, "未配置") // Use date text for main message
@@ -217,7 +215,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
-            views.setViewVisibility(R.id.widget_status_image, View.GONE)
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
             views.setViewVisibility(R.id.widget_pc_text, View.GONE)
             views.setTextViewText(R.id.widget_date_text, "连接失败") // Use date text for main message
