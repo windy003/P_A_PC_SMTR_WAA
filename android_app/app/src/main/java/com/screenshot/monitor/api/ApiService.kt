@@ -34,8 +34,7 @@ class ApiService(private val context: Context) {
                 }
                 // 如果是域名（包含点号但不是纯 IP），使用 HTTPS
                 pcIp.contains(".") && !pcIp.matches(Regex("^\\d+\\.\\d+\\.\\d+\\.\\d+.*")) -> {
-                    val serverAddress = if (pcIp.contains(":")) pcIp else pcIp
-                    "https://${serverAddress.trimEnd('/')}/api/status"
+                    "https://${pcIp.trimEnd('/')}/api/status"
                 }
                 // 如果是局域网 IP 地址，使用 HTTP
                 else -> {
