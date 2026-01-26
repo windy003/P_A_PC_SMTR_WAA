@@ -3,9 +3,10 @@ Screenshot Status Web Server
 提供截图状态查询的 Web API 服务
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 from flask_cors import CORS
 from pathlib import Path
+import os
 from datetime import datetime
 import re
 
@@ -13,8 +14,7 @@ app = Flask(__name__)
 CORS(app)  # 允许跨域访问
 
 # 配置路径
-home_dir = Path.home()
-screenshots_path = home_dir / "OneDrive" / "图片" / "Screenshots"
+screenshots_path = Path("~/Pictures/Screenshots").expanduser()
 
 
 def check_has_folders():
@@ -88,6 +88,13 @@ def health_check():
     })
 
 
+@app.route('/favicon.ico')
+def favicon():
+    """网站图标"""
+    icon_path = Path(__file__).parent / '16-9.png'
+    return send_file(icon_path, mimetype='image/png')
+
+
 @app.route('/', methods=['GET'])
 def index():
     """主页"""
@@ -96,6 +103,7 @@ def index():
     <head>
         <title>Screenshot Status Server</title>
         <meta charset="utf-8">
+        <link rel="icon" type="image/png" href="/favicon.ico">
     </head>
     <body style="font-family: Arial, sans-serif; padding: 20px;">
         <h1>截图状态服务器</h1>
