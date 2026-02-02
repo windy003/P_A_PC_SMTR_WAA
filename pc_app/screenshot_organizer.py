@@ -12,15 +12,19 @@ from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QColor
 import shutil
 import re
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv(Path(__file__).parent / '.env')
 
 
 class ScreenshotOrganizer(QSystemTrayIcon):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # 获取用户家目录
-        self.home_dir = Path.home()
-        self.screenshots_path = self.home_dir / "OneDrive" / "图片" / "Screenshots"
+        # 从环境变量获取截图目录路径
+        screenshots_env = os.getenv('SCREENSHOTS_PATH', '~/OneDrive/图片/Screenshots')
+        self.screenshots_path = Path(screenshots_env).expanduser()
 
         # 项目目录（程序所在目录）
         self.project_dir = Path(__file__).parent

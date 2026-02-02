@@ -9,12 +9,17 @@ from pathlib import Path
 import os
 from datetime import datetime
 import re
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv(Path(__file__).parent / '.env')
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域访问
 
-# 配置路径
-screenshots_path = Path("~/Pictures/Screenshots").expanduser()
+# 从环境变量获取截图目录路径
+screenshots_env = os.getenv('SCREENSHOTS_PATH', '~/OneDrive/图片/Screenshots')
+screenshots_path = Path(screenshots_env).expanduser()
 
 
 def check_has_folders():

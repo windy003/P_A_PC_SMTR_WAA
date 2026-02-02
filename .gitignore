@@ -4,7 +4,5 @@ android_app/.idea
 android_app/build
 .claude
 
-hongmeng_app/app/build
-hongmeng_app/.gradle
-hongmeng_app/.idea
-hongmeng_app/build
+
+pc_app/.env

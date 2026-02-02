@@ -1,0 +1,3 @@
+# 截图目录路径
+# 支持 ~ 表示用户主目录
+SCREENSHOTS_PATH=~/OneDrive/图片/Screenshots
