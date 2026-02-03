@@ -197,33 +197,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
-        private fun showErrorWidget(
-            context: Context,
-            appWidgetManager: AppWidgetManager,
-            appWidgetId: Int,
-            errorMessage: String?
-        ) {
-            val views = RemoteViews(context.packageName, R.layout.widget_screenshot)
-
-            // 设置点击事件 - 打开主界面
-            val intent = android.content.Intent(context, com.screenshot.monitor.MainActivity::class.java)
-            val pendingIntent = android.app.PendingIntent.getActivity(
-                context,
-                0,
-                intent,
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-            )
-            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-
-            views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
-            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
-            views.setTextViewText(R.id.widget_date_text, "连接失败") // Use date text for main message
-            views.setTextViewText(R.id.widget_hour_text, "") // Clear hour
-            views.setTextViewText(R.id.widget_minute_text, "") // Clear minute
-            views.setTextViewText(R.id.widget_update_time, errorMessage ?: "请检查网络")
-            appWidgetManager.updateAppWidget(appWidgetId, views)
-        }
-
         /**
          * 启动定时更新任务 - 每分钟更新一次
          */
