@@ -58,6 +58,16 @@ object DeviceConfig {
         widgetPadding = 6
     )
 
+    // 三星 Galaxy S20 Ultra 配置
+    private val SAMSUNG_S20_ULTRA_CONFIG = WidgetStyleConfig(
+        pcTextSize = 20f,       // 6.9英寸大屏，适当放大字体
+        dateTextSize = 20f,
+        hourTextSize = 20f,
+        minuteTextSize = 15f,
+        updateTimeSize = 15f,
+        widgetPadding = 4
+    )
+
     /**
      * 获取当前设备的配置
      */
@@ -93,6 +103,12 @@ object DeviceConfig {
                 Log.d(TAG, "✓ 匹配到: 小米 Mix Fold 2")
                 Log.d(TAG, "  应用配置: pcText=${XIAOMI_MIX_FOLD_2_CONFIG.pcTextSize}sp, date=${XIAOMI_MIX_FOLD_2_CONFIG.dateTextSize}sp, hour=${XIAOMI_MIX_FOLD_2_CONFIG.hourTextSize}sp")
                 XIAOMI_MIX_FOLD_2_CONFIG
+            }
+            // 三星 Galaxy S20 Ultra
+            isSamsungS20Ultra(deviceManufacturer, deviceModel) -> {
+                Log.d(TAG, "✓ 匹配到: 三星 Galaxy S20 Ultra")
+                Log.d(TAG, "  应用配置: pcText=${SAMSUNG_S20_ULTRA_CONFIG.pcTextSize}sp, date=${SAMSUNG_S20_ULTRA_CONFIG.dateTextSize}sp, hour=${SAMSUNG_S20_ULTRA_CONFIG.hourTextSize}sp")
+                SAMSUNG_S20_ULTRA_CONFIG
             }
             else -> {
                 Log.w(TAG, "✗ 未匹配到已知设备，使用默认配置")
@@ -133,6 +149,16 @@ object DeviceConfig {
                (model.contains("22061218C", ignoreCase = true) ||  // 国行版
                 model.contains("MIX Fold 2", ignoreCase = true) ||
                 model.contains("Mix Fold 2", ignoreCase = true))
+    }
+
+    /**
+     * 检测是否为三星 Galaxy S20 Ultra
+     */
+    private fun isSamsungS20Ultra(manufacturer: String, model: String): Boolean {
+        return manufacturer.equals("samsung", ignoreCase = true) &&
+               (model.contains("SM-G988", ignoreCase = true) ||  // 全球版 (SM-G988B/U/W 等)
+                model.contains("SM-G9880", ignoreCase = true) ||  // 国行版
+                model.contains("S20 Ultra", ignoreCase = true))
     }
 
     /**
