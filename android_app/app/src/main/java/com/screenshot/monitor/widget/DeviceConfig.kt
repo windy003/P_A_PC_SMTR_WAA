@@ -68,6 +68,16 @@ object DeviceConfig {
         widgetPadding = 4
     )
 
+    // 三星 Galaxy Z Trifold 配置（三折叠屏，展开后超大屏幕）
+    private val SAMSUNG_Z_TRIFOLD_CONFIG = WidgetStyleConfig(
+        pcTextSize = 14f,       // 三折叠展开后屏幕极大，使用更大字体
+        dateTextSize = 12f,
+        hourTextSize = 10f,
+        minuteTextSize = 10f,
+        updateTimeSize = 10f,
+        widgetPadding = 4
+    )
+
     /**
      * 获取当前设备的配置
      */
@@ -109,6 +119,12 @@ object DeviceConfig {
                 Log.d(TAG, "✓ 匹配到: 三星 Galaxy S20 Ultra")
                 Log.d(TAG, "  应用配置: pcText=${SAMSUNG_S20_ULTRA_CONFIG.pcTextSize}sp, date=${SAMSUNG_S20_ULTRA_CONFIG.dateTextSize}sp, hour=${SAMSUNG_S20_ULTRA_CONFIG.hourTextSize}sp")
                 SAMSUNG_S20_ULTRA_CONFIG
+            }
+            // 三星 Galaxy Z Trifold
+            isSamsungZTrifold(deviceManufacturer, deviceModel, deviceProduct) -> {
+                Log.d(TAG, "✓ 匹配到: 三星 Galaxy Z Trifold")
+                Log.d(TAG, "  应用配置: pcText=${SAMSUNG_Z_TRIFOLD_CONFIG.pcTextSize}sp, date=${SAMSUNG_Z_TRIFOLD_CONFIG.dateTextSize}sp, hour=${SAMSUNG_Z_TRIFOLD_CONFIG.hourTextSize}sp")
+                SAMSUNG_Z_TRIFOLD_CONFIG
             }
             else -> {
                 Log.w(TAG, "✗ 未匹配到已知设备，使用默认配置")
@@ -159,6 +175,18 @@ object DeviceConfig {
                (model.contains("SM-G988", ignoreCase = true) ||  // 全球版 (SM-G988B/U/W 等)
                 model.contains("SM-G9880", ignoreCase = true) ||  // 国行版
                 model.contains("S20 Ultra", ignoreCase = true))
+    }
+
+    /**
+     * 检测是否为三星 Galaxy Z Trifold
+     * 型号参考：SM-F9680（国行版）
+     */
+    private fun isSamsungZTrifold(manufacturer: String, model: String, product: String): Boolean {
+        return manufacturer.equals("samsung", ignoreCase = true) &&
+               (model.contains("SM-F9680", ignoreCase = true) ||  // 国行版
+                model.contains("Trifold", ignoreCase = true) ||
+                model.contains("TriFold", ignoreCase = true) ||
+                product.contains("f9680", ignoreCase = true))
     }
 
     /**

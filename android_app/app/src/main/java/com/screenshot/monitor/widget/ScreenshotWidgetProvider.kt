@@ -118,44 +118,32 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
 
                     // 更新 widget UI（只更新条目数部分）
                     withContext(Dispatchers.Main) {
-                        val views = RemoteViews(context.packageName, R.layout.widget_screenshot)
-
-                        // 设置点击事件 - 打开主界面
-                        val intent = android.content.Intent(context, com.screenshot.monitor.MainActivity::class.java)
-                        val pendingIntent = android.app.PendingIntent.getActivity(
-                            context,
-                            0,
-                            intent,
-                            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-                        )
-                        views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+                        // 使用 partiallyUpdateAppWidget 只更新条目数，不重新展开布局（避免覆盖已显示的日期时间）
+                        val partialViews = RemoteViews(context.packageName, R.layout.widget_screenshot)
 
                         if (response != null) {
                             // 缓存条目数
                             sharedPref.edit().putInt("cached_count", response.totalCount).apply()
 
-                            // 只更新条目数显示，不修改时间
-                            views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
-                            // 数字部分显示为红色
                             val countText = String.format(
                                 Locale.getDefault(),
                                 "PC <font color='#FF0000'>%d</font> 个",
                                 response.totalCount
                             )
-                            views.setTextViewText(
+                            partialViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
+                            partialViews.setTextViewText(
                                 R.id.widget_update_time,
                                 android.text.Html.fromHtml(countText, android.text.Html.FROM_HTML_MODE_LEGACY)
                             )
-                            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
+                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
                         } else {
-                            // 连接失败，显示错误信息
-                            views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
-                            views.setTextViewText(R.id.widget_update_time, "连接失败")
-                            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
+                            partialViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
+                            partialViews.setTextViewText(R.id.widget_update_time, "连接失败")
+                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
                         }
 
-                        // 更新 widget（只更新条目数部分）
-                        appWidgetManager.updateAppWidget(appWidgetId, views)
+                        // partiallyUpdateAppWidget：只应用差量，不重新展开布局，日期时间不受影响
+                        appWidgetManager.partiallyUpdateAppWidget(appWidgetId, partialViews)
                     }
 
                 } catch (e: Exception) {
@@ -165,7 +153,8 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                         val errorViews = RemoteViews(context.packageName, R.layout.widget_screenshot)
                         errorViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
                         errorViews.setTextViewText(R.id.widget_update_time, "网络错误")
-                        appWidgetManager.updateAppWidget(appWidgetId, errorViews)
+                        // 同样使用 partiallyUpdateAppWidget，避免覆盖日期时间
+                        appWidgetManager.partiallyUpdateAppWidget(appWidgetId, errorViews)
                     }
                 }
             }
