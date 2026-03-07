@@ -1,1 +1,1 @@
-start  /b pythonw  D:\files\using\Web\P_A_PC_SMTR_WAA\pc_app\web_server.py
+start  /b pythonw  .\web_server.py

@@ -1,1 +1,1 @@
-start  /b pythonw "D:\files\using\Web\P_A_PC_SMTR_WAA\pc_app\screenshot_organizer.py"
+start  /b pythonw ".\screenshot_organizer.py"
