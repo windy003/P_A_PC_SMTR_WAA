@@ -25,6 +25,29 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
         private const val TAG = "ScreenshotWidget"
         private const val ACTION_UPDATE_WIDGET = "com.screenshot.monitor.UPDATE_WIDGET"
 
+        /**
+         * 根据小部件高度（dp）自动计算字体大小。
+         * 若无法获取高度则回退到 DeviceConfig。
+         */
+        fun calculateFontSizes(appWidgetManager: AppWidgetManager, appWidgetId: Int): Pair<Float, Float> {
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
+            // 优先使用 max height（竖屏时反映实际高度），其次 min height，均为 0 则回退
+            val heightDp = if (maxHeight > 0) maxHeight else minHeight
+
+            return if (heightDp > 0) {
+                val dateSize = (heightDp * 0.15f).coerceIn(8f, 60f)
+                val updateSize = (heightDp * 0.13f).coerceIn(6f, 30f)
+                Log.d(TAG, "根据小部件高度 ${heightDp}dp 计算字体大小: 日期=${dateSize}sp, 状态=${updateSize}sp")
+                Pair(dateSize, updateSize)
+            } else {
+                val config = DeviceConfig.getDeviceConfig()
+                Log.d(TAG, "无法获取小部件高度，回退设备配置: 日期=${config.dateTextSize}sp, 状态=${config.updateTimeSize}sp")
+                Pair(config.dateTextSize, config.updateTimeSize)
+            }
+        }
+
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -57,8 +80,8 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                 month, day, hour, minute
             )
 
-            // 获取设备配置
-            val deviceConfig = DeviceConfig.getDeviceConfig()
+            // 根据小部件高度自动计算字体大小
+            val (dateTextSize, updateTimeSize) = calculateFontSizes(appWidgetManager, appWidgetId)
 
             // 立即更新时间显示（使用上次缓存的条目数）
             val views = RemoteViews(context.packageName, R.layout.widget_screenshot)
@@ -82,9 +105,9 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             views.setViewVisibility(R.id.widget_hour_text, View.GONE)
             views.setViewVisibility(R.id.widget_minute_text, View.GONE)
 
-            // 应用设备配置的字体大小
-            views.setTextViewTextSize(R.id.widget_date_text, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.dateTextSize)
-            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
+            // 应用根据小部件高度计算的字体大小
+            views.setTextViewTextSize(R.id.widget_date_text, android.util.TypedValue.COMPLEX_UNIT_SP, dateTextSize)
+            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, updateTimeSize)
 
             // 显示上次缓存的条目数（如果有）
             val cachedCount = sharedPref.getInt("cached_count", -1)
@@ -135,11 +158,11 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                                 R.id.widget_update_time,
                                 android.text.Html.fromHtml(countText, android.text.Html.FROM_HTML_MODE_LEGACY)
                             )
-                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
+                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, updateTimeSize)
                         } else {
                             partialViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
                             partialViews.setTextViewText(R.id.widget_update_time, "连接失败")
-                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, deviceConfig.updateTimeSize)
+                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, updateTimeSize)
                         }
 
                         // partiallyUpdateAppWidget：只应用差量，不重新展开布局，日期时间不受影响
@@ -295,6 +318,21 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                 e.printStackTrace()
             }
         }
+    }
+
+    /**
+     * 当用户调整小部件尺寸时触发，重新根据新高度更新字体大小
+     */
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        val newHeight = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        Log.d(TAG, "小部件尺寸变化，新高度: ${newHeight}dp，重新更新 widget ID: $appWidgetId")
+        updateAppWidget(context, appWidgetManager, appWidgetId)
     }
 
     override fun onReceive(context: Context, intent: android.content.Intent) {
