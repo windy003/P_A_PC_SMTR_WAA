@@ -12,7 +12,22 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "2026/3/13-1"
+        versionName "2026/5/25-1"
+    }
+
+    // 两个并存版本：同一份代码产出两个 applicationId 不同的 App
+    flavorDimensions = ["version"]
+    productFlavors {
+        one {
+            dimension "version"
+            // applicationId 保持 com.screenshot.monitor
+            resValue "string", "app_name", "1截图监控"
+        }
+        two {
+            dimension "version"
+            applicationIdSuffix ".two"   // 最终 applicationId = com.screenshot.monitor.two
+            resValue "string", "app_name", "2截图监控"
+        }
     }
 
     buildTypes {

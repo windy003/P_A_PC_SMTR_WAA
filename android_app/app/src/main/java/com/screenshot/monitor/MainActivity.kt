@@ -22,6 +22,7 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     private lateinit var editPcIp: EditText
+    private lateinit var editHostName: EditText
     private lateinit var btnSave: Button
     private lateinit var textStatus: TextView
     private lateinit var textDeviceInfo: TextView
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         editPcIp = findViewById(R.id.edit_pc_ip)
+        editHostName = findViewById(R.id.edit_host_name)
         btnSave = findViewById(R.id.btn_save)
         textStatus = findViewById(R.id.text_status)
         textDeviceInfo = findViewById(R.id.text_device_info)
@@ -43,6 +45,10 @@ class MainActivity : AppCompatActivity() {
         val savedIp = sharedPref.getString("pc_ip", "")
         editPcIp.setText(savedIp)
 
+        // 加载保存的主机名字
+        val savedHostName = sharedPref.getString("host_name", "")
+        editHostName.setText(savedHostName)
+
         // 如果已有 IP 配置，自动获取状态
         if (!savedIp.isNullOrEmpty()) {
             fetchAndDisplayStatus(savedIp)
@@ -52,9 +58,13 @@ class MainActivity : AppCompatActivity() {
 
         btnSave.setOnClickListener {
             val pcIp = editPcIp.text.toString().trim()
+            val hostName = editHostName.text.toString().trim()
             if (pcIp.isNotEmpty()) {
-                // 保存 IP
-                sharedPref.edit().putString("pc_ip", pcIp).apply()
+                // 保存 IP 和主机名字
+                sharedPref.edit()
+                    .putString("pc_ip", pcIp)
+                    .putString("host_name", hostName)
+                    .apply()
 
                 // 启动每分钟的定时更新（Widget 会自动管理）
                 ScreenshotWidgetProvider.startAutoUpdate(this)

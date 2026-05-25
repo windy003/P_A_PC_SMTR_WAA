@@ -25,28 +25,8 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
         private const val TAG = "ScreenshotWidget"
         private const val ACTION_UPDATE_WIDGET = "com.screenshot.monitor.UPDATE_WIDGET"
 
-        /**
-         * 根据小部件高度（dp）自动计算字体大小。
-         * 若无法获取高度则回退到 DeviceConfig。
-         */
-        fun calculateFontSizes(appWidgetManager: AppWidgetManager, appWidgetId: Int): Pair<Float, Float> {
-            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-            val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-            // 优先使用 max height（竖屏时反映实际高度），其次 min height，均为 0 则回退
-            val heightDp = if (maxHeight > 0) maxHeight else minHeight
-
-            return if (heightDp > 0) {
-                val dateSize = (heightDp * 0.15f).coerceIn(8f, 60f)
-                val updateSize = (heightDp * 0.13f).coerceIn(6f, 30f)
-                Log.d(TAG, "根据小部件高度 ${heightDp}dp 计算字体大小: 日期=${dateSize}sp, 状态=${updateSize}sp")
-                Pair(dateSize, updateSize)
-            } else {
-                val config = DeviceConfig.getDeviceConfig()
-                Log.d(TAG, "无法获取小部件高度，回退设备配置: 日期=${config.dateTextSize}sp, 状态=${config.updateTimeSize}sp")
-                Pair(config.dateTextSize, config.updateTimeSize)
-            }
-        }
+        // 字号不再由代码计算：布局里两行文字都启用了 autoSizeTextType="uniform"，
+        // 系统会把文字自动缩放到刚好填满各自按权重分配到的高度框，保证完整显示不溢出。
 
         fun updateAppWidget(
             context: Context,
@@ -58,6 +38,9 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             val appContext = context.applicationContext
             val sharedPref = appContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
             val pcIp = sharedPref.getString("pc_ip", "") ?: ""
+
+            // 读取用户设置的主机名字，留空则默认显示 "PC"
+            val hostName = (sharedPref.getString("host_name", "") ?: "").ifBlank { "PC" }
 
             if (pcIp.isEmpty()) {
                 Log.w(TAG, "PC IP is empty, showing no config widget")
@@ -80,8 +63,8 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                 month, day, hour, minute
             )
 
-            // 根据小部件高度自动计算字体大小
-            val (dateTextSize, updateTimeSize) = calculateFontSizes(appWidgetManager, appWidgetId)
+            // 上次缓存的条目数（用于立即显示；字号由布局的 autosize 自动处理）
+            val cachedCount = sharedPref.getInt("cached_count", -1)
 
             // 立即更新时间显示（使用上次缓存的条目数）
             val views = RemoteViews(context.packageName, R.layout.widget_screenshot)
@@ -96,27 +79,21 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
 
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
 
-            // 隐藏PC文字，使用date_text显示日期和时间（换行）
-            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
+            // 第一行：主机名
+            views.setTextViewText(R.id.widget_host_text, hostName)
+
+            // 第三行：日期时间
             views.setTextViewText(
                 R.id.widget_date_text,
                 android.text.Html.fromHtml(dateTimeDisplay, android.text.Html.FROM_HTML_MODE_LEGACY)
             )
-            views.setViewVisibility(R.id.widget_hour_text, View.GONE)
-            views.setViewVisibility(R.id.widget_minute_text, View.GONE)
 
-            // 应用根据小部件高度计算的字体大小
-            views.setTextViewTextSize(R.id.widget_date_text, android.util.TypedValue.COMPLEX_UNIT_SP, dateTextSize)
-            views.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, updateTimeSize)
-
-            // 显示上次缓存的条目数（如果有）
-            val cachedCount = sharedPref.getInt("cached_count", -1)
+            // 第二行：个数（使用上次缓存的条目数，数字显示为红色）
+            views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
             if (cachedCount >= 0) {
-                views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
-                // 数字部分显示为红色
                 val countText = String.format(
                     Locale.getDefault(),
-                    "<b>PC <font color='#FF0000'>%d</font> 个</b>",
+                    "<b><font color='#FF0000'>%d</font> 个</b>",
                     cachedCount
                 )
                 views.setTextViewText(
@@ -124,7 +101,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                     android.text.Html.fromHtml(countText, android.text.Html.FROM_HTML_MODE_LEGACY)
                 )
             } else {
-                views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
                 views.setTextViewText(R.id.widget_update_time, "检查中...")
             }
 
@@ -150,7 +126,7 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
 
                             val countText = String.format(
                                 Locale.getDefault(),
-                                "PC <font color='#FF0000'>%d</font> 个",
+                                "<font color='#FF0000'>%d</font> 个",
                                 response.totalCount
                             )
                             partialViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
@@ -158,11 +134,9 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                                 R.id.widget_update_time,
                                 android.text.Html.fromHtml(countText, android.text.Html.FROM_HTML_MODE_LEGACY)
                             )
-                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, updateTimeSize)
                         } else {
                             partialViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
                             partialViews.setTextViewText(R.id.widget_update_time, "连接失败")
-                            partialViews.setTextViewTextSize(R.id.widget_update_time, android.util.TypedValue.COMPLEX_UNIT_SP, updateTimeSize)
                         }
 
                         // partiallyUpdateAppWidget：只应用差量，不重新展开布局，日期时间不受影响
@@ -201,11 +175,10 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
             views.setViewVisibility(R.id.widget_time_display_layout, View.VISIBLE)
-            views.setViewVisibility(R.id.widget_pc_text, View.GONE)
-            views.setTextViewText(R.id.widget_date_text, "未配置") // Use date text for main message
-            views.setTextViewText(R.id.widget_hour_text, "") // Clear hour
-            views.setTextViewText(R.id.widget_minute_text, "") // Clear minute
-            views.setTextViewText(R.id.widget_update_time, "请打开应用设置 IP")
+            views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
+            views.setTextViewText(R.id.widget_host_text, "未配置")   // 第一行
+            views.setTextViewText(R.id.widget_update_time, "请打开应用") // 第二行
+            views.setTextViewText(R.id.widget_date_text, "设置 IP")    // 第三行
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
