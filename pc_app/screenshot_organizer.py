@@ -5,10 +5,17 @@ Screenshots Auto Organizer
 
 import sys
 import os
+import json
+import threading
+import urllib.request
+import webbrowser
 from pathlib import Path
 from datetime import datetime, timedelta
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtWidgets import (
+    QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox,
+    QDialog, QFormLayout, QLineEdit, QDialogButtonBox
+)
+from PyQt5.QtCore import QTimer, Qt, QObject, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QColor
 import shutil
 import re
@@ -18,7 +25,43 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / '.env')
 
 
+def create_count_icon(count, bg_color, text=None):
+    """创建带有数字（或自定义文字）的托盘图标
+
+    count: 显示的数字
+    bg_color: QColor 背景颜色
+    text: 若提供，则直接显示该文字（覆盖 count）
+    """
+    pixmap = QPixmap(64, 64)
+    pixmap.fill(bg_color)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+
+    font = QFont("Arial", 32, QFont.Bold)
+    painter.setFont(font)
+
+    if text is None:
+        text = str(count) if count < 1000 else "999+"
+
+    metrics = painter.fontMetrics()
+    text_width = metrics.horizontalAdvance(text)
+    text_height = metrics.height()
+
+    text_x = (pixmap.width() - text_width) // 2
+    text_y = (pixmap.height() + text_height) // 2 - metrics.descent()
+
+    painter.setPen(QColor(255, 255, 255))
+    painter.drawText(text_x, text_y, text)
+
+    painter.end()
+    return QIcon(pixmap)
+
+
 class ScreenshotOrganizer(QSystemTrayIcon):
+    # 用户点击"添加新的服务器"时发出
+    add_server_requested = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -68,6 +111,12 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         open_folder_action = QAction("打开Screenshots文件夹", menu)
         open_folder_action.triggered.connect(self.open_screenshots_folder)
         menu.addAction(open_folder_action)
+
+        menu.addSeparator()
+
+        add_server_action = QAction("添加新的服务器 (&A)", menu)
+        add_server_action.triggered.connect(self.add_server_requested.emit)
+        menu.addAction(add_server_action)
 
         menu.addSeparator()
 
@@ -127,40 +176,8 @@ class ScreenshotOrganizer(QSystemTrayIcon):
             return 0
 
     def create_icon_with_count(self, has_new_folder, count):
-        """创建带有数字的图标"""
-        # 创建一个64x64的图标
-        pixmap = QPixmap(64, 64)
-
-        # 背景改为全红色
-        pixmap.fill(QColor(255, 0, 0))
-
-        # 在图标上绘制数字（包括0）
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        # 设置字体
-        font = QFont("Arial", 32, QFont.Bold)
-        painter.setFont(font)
-
-        # 绘制数字
-        text = str(count) if count < 1000 else "999+"
-
-        # 计算文字大小，使其居中
-        metrics = painter.fontMetrics()
-        text_width = metrics.horizontalAdvance(text)
-        text_height = metrics.height()
-
-        # 计算居中位置
-        text_x = (pixmap.width() - text_width) // 2
-        text_y = (pixmap.height() + text_height) // 2 - metrics.descent()
-
-        # 绘制白色数字
-        painter.setPen(QColor(255, 255, 255))
-        painter.drawText(text_x, text_y, text)
-
-        painter.end()
-
-        return QIcon(pixmap)
+        """创建带有数字的图标（本地截图：红色背景）"""
+        return create_count_icon(count, QColor(255, 0, 0))
 
     def check_time_and_run(self):
         """每1分钟执行一次检查"""
@@ -324,13 +341,280 @@ class ScreenshotOrganizer(QSystemTrayIcon):
         QApplication.quit()
 
 
+class ServerDialog(QDialog):
+    """添加 / 编辑服务器的对话框，输入主机名、IP、端口"""
+
+    def __init__(self, parent=None, hostname="", ip="", port="5001", title="添加新的服务器"):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setMinimumWidth(420)
+
+        # 放大整个对话框的字体（标签、输入框、按钮都会继承）
+        dialog_font = QFont()
+        dialog_font.setPointSize(14)
+        self.setFont(dialog_font)
+
+        layout = QFormLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(14)
+
+        self.hostname_edit = QLineEdit(hostname)
+        self.hostname_edit.setPlaceholderText("例如：客厅电脑")
+        self.ip_edit = QLineEdit(ip)
+        self.ip_edit.setPlaceholderText("例如：192.168.1.100")
+        self.port_edit = QLineEdit(str(port))
+        self.port_edit.setPlaceholderText("例如：5001")
+
+        # 输入框高度更舒适
+        for edit in (self.hostname_edit, self.ip_edit, self.port_edit):
+            edit.setMinimumHeight(32)
+
+        layout.addRow("主机名:", self.hostname_edit)
+        layout.addRow("IP 地址:", self.ip_edit)
+        layout.addRow("端口:", self.port_edit)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.button(QDialogButtonBox.Ok).setText("确定")
+        buttons.button(QDialogButtonBox.Cancel).setText("取消")
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addRow(buttons)
+
+    def get_values(self):
+        """返回 (主机名, IP, 端口)，均已去除首尾空白"""
+        return (
+            self.hostname_edit.text().strip(),
+            self.ip_edit.text().strip(),
+            self.port_edit.text().strip(),
+        )
+
+
+class ServerTrayIcon(QSystemTrayIcon):
+    """代表一个远程服务器的托盘图标，定时轮询其 /api/status 接口"""
+
+    # 后台线程轮询完成后发出: (是否在线, 文件数, 状态消息)
+    status_signal = pyqtSignal(bool, int, str)
+
+    def __init__(self, manager, hostname, ip, port, parent=None):
+        super().__init__(parent)
+        self.manager = manager
+        self.hostname = hostname
+        self.ip = ip
+        self.port = str(port)
+
+        self.online = False
+        self.count = 0
+        self.last_message = "尚未连接"
+
+        # 跨线程更新界面：信号自动排队到主线程执行
+        self.status_signal.connect(self.on_status)
+
+        self.setup_menu()
+        self.update_display()
+        self.show()
+
+        # 每 60 秒轮询一次
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.poll)
+        self.timer.start(60000)
+
+        # 立即轮询一次
+        self.poll()
+
+    def setup_menu(self):
+        """构建服务器图标的右键菜单"""
+        menu = QMenu()
+
+        refresh_action = QAction("刷新状态", menu)
+        refresh_action.triggered.connect(self.poll)
+        menu.addAction(refresh_action)
+
+        open_web_action = QAction("打开网页", menu)
+        open_web_action.triggered.connect(self.open_web)
+        menu.addAction(open_web_action)
+
+        menu.addSeparator()
+
+        edit_action = QAction("编辑服务器", menu)
+        edit_action.triggered.connect(lambda: self.manager.edit_server(self))
+        menu.addAction(edit_action)
+
+        remove_action = QAction("删除此服务器", menu)
+        remove_action.triggered.connect(lambda: self.manager.remove_server(self))
+        menu.addAction(remove_action)
+
+        menu.addSeparator()
+
+        quit_action = QAction("退出全部", menu)
+        quit_action.triggered.connect(QApplication.quit)
+        menu.addAction(quit_action)
+
+        self.setContextMenu(menu)
+
+    def poll(self):
+        """在后台线程发起状态查询，避免阻塞界面"""
+        thread = threading.Thread(target=self._poll_worker, daemon=True)
+        thread.start()
+
+    def _poll_worker(self):
+        url = f"http://{self.ip}:{self.port}/api/status"
+        try:
+            # 绕过系统代理直连：开了代理时局域网 IP 走代理会连接失败
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open(url, timeout=4) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            count = int(data.get("totalCount", 0))
+            message = data.get("message", f"在线，共 {count} 个文件")
+            self.status_signal.emit(True, count, message)
+        except Exception as e:
+            self.status_signal.emit(False, 0, str(e))
+
+    def on_status(self, ok, count, message):
+        """轮询结果回调（运行在主线程）"""
+        self.online = ok
+        self.count = count
+        self.last_message = message if ok else f"连接失败 ({message})"
+        self.update_display()
+
+    def update_display(self):
+        """根据当前状态刷新图标和悬浮提示"""
+        if self.online:
+            # 在线：蓝色背景 + 文件数
+            icon = create_count_icon(self.count, QColor(0, 120, 215))
+        else:
+            # 离线：灰色背景 + 问号
+            icon = create_count_icon(0, QColor(120, 120, 120), text="?")
+        self.setIcon(icon)
+        self.setToolTip(self.tooltip_text())
+
+    def tooltip_text(self):
+        """悬浮提示：主机名、IP、端口、状态"""
+        return (
+            f"主机名: {self.hostname}\n"
+            f"IP: {self.ip}\n"
+            f"端口: {self.port}\n"
+            f"状态: {self.last_message}"
+        )
+
+    def open_web(self):
+        """在浏览器中打开服务器主页"""
+        webbrowser.open(f"http://{self.ip}:{self.port}/")
+
+
+class AppManager(QObject):
+    """统管本地截图托盘 + 所有远程服务器托盘，并负责持久化"""
+
+    def __init__(self):
+        super().__init__()
+        self.project_dir = Path(__file__).parent
+        self.servers_file = self.project_dir / "servers.json"
+        self.server_icons = []
+
+        # 本地截图整理托盘（原有功能）
+        self.organizer = ScreenshotOrganizer()
+        self.organizer.add_server_requested.connect(self.add_server)
+
+        # 启动时恢复已保存的服务器
+        self.load_servers()
+
+    def load_servers(self):
+        """从 servers.json 读取并重建服务器托盘图标"""
+        if not self.servers_file.exists():
+            return
+        try:
+            data = json.loads(self.servers_file.read_text(encoding="utf-8"))
+            for s in data:
+                self._create_icon(s["hostname"], s["ip"], s["port"])
+            print(f"已恢复 {len(data)} 个服务器")
+        except Exception as e:
+            print(f"加载服务器列表出错: {e}")
+
+    def save_servers(self):
+        """将当前服务器列表写入 servers.json"""
+        try:
+            data = [
+                {"hostname": i.hostname, "ip": i.ip, "port": i.port}
+                for i in self.server_icons
+            ]
+            self.servers_file.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        except Exception as e:
+            print(f"保存服务器列表出错: {e}")
+
+    def _create_icon(self, hostname, ip, port):
+        icon = ServerTrayIcon(self, hostname, ip, port)
+        self.server_icons.append(icon)
+        return icon
+
+    def add_server(self):
+        """弹出对话框新增一个服务器"""
+        dlg = ServerDialog(title="添加新的服务器")
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        hostname, ip, port = dlg.get_values()
+        if not ip or not port:
+            QMessageBox.warning(None, "输入错误", "IP 和端口不能为空")
+            return
+        if not hostname:
+            hostname = ip
+
+        self._create_icon(hostname, ip, port)
+        self.save_servers()
+        self.organizer.showMessage(
+            "已添加服务器",
+            f"{hostname} ({ip}:{port})",
+            QSystemTrayIcon.Information,
+            2000,
+        )
+
+    def edit_server(self, icon):
+        """编辑已有服务器的信息"""
+        dlg = ServerDialog(
+            hostname=icon.hostname, ip=icon.ip, port=icon.port, title="编辑服务器"
+        )
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        hostname, ip, port = dlg.get_values()
+        if not ip or not port:
+            QMessageBox.warning(None, "输入错误", "IP 和端口不能为空")
+            return
+
+        icon.hostname = hostname or ip
+        icon.ip = ip
+        icon.port = port
+        icon.update_display()
+        icon.poll()
+        self.save_servers()
+
+    def remove_server(self, icon):
+        """删除一个服务器"""
+        reply = QMessageBox.question(
+            None,
+            "删除服务器",
+            f"确定删除服务器 {icon.hostname} ({icon.ip}:{icon.port}) 吗？",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply != QMessageBox.Yes:
+            return
+
+        icon.timer.stop()
+        icon.hide()
+        if icon in self.server_icons:
+            self.server_icons.remove(icon)
+        icon.deleteLater()
+        self.save_servers()
+
+
 def main():
     """主函数"""
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)  # 关闭最后一个窗口时不退出
 
-    # 创建托盘应用
-    organizer = ScreenshotOrganizer()
+    # 创建应用管理器（包含本地截图托盘 + 远程服务器托盘）
+    manager = AppManager()
 
     sys.exit(app.exec_())
 
