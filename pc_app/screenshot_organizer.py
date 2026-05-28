@@ -425,7 +425,7 @@ class ServerTrayIcon(QSystemTrayIcon):
         """构建服务器图标的右键菜单"""
         menu = QMenu()
 
-        refresh_action = QAction("刷新状态", menu)
+        refresh_action = QAction("刷新状态 (&S)", menu)
         refresh_action.triggered.connect(self.poll)
         menu.addAction(refresh_action)
 
