@@ -57,22 +57,52 @@
             android:visibility="visible" />
 
         <!-- 第三行：距离上次成功获取数据过去的时间，显示为 "xx:xx前"，秒数自动递增 -->
-        <Chronometer
-            android:id="@+id/widget_chronometer"
+        <!-- 拆成两部分：Chronometer 显示数字（红色），后面跟一个 "前"（蓝色） -->
+        <LinearLayout
+            android:id="@+id/widget_chronometer_row"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="4"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:textColor="#FF0000"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:padding="0dp"
-            android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="6sp"
-            android:autoSizeMaxTextSize="96sp"
-            android:autoSizeStepGranularity="1sp" />
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Chronometer
+                android:id="@+id/widget_chronometer"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:textColor="#FF0000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:padding="0dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="6sp"
+                android:autoSizeMaxTextSize="96sp"
+                android:autoSizeStepGranularity="1sp" />
+
+            <TextView
+                android:id="@+id/widget_chronometer_suffix"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="前"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:textColor="#0000FF"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="6sp"
+                android:autoSizeMaxTextSize="96sp"
+                android:autoSizeStepGranularity="1sp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

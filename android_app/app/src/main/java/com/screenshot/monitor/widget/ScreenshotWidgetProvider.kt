@@ -73,14 +73,16 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                 "last_fetch_elapsed",
                 android.os.SystemClock.elapsedRealtime()
             )
-            views.setChronometer(R.id.widget_chronometer, chronometerBase, "%s前", true)
+            views.setChronometer(R.id.widget_chronometer, chronometerBase, "%s", true)
+            // "前" 后缀（蓝色）正常显示
+            views.setViewVisibility(R.id.widget_chronometer_suffix, View.VISIBLE)
 
-            // 第二行：个数（使用上次缓存的条目数，数字显示为红色）
+            // 第二行：个数（使用上次缓存的条目数，数字红色，"个" 绿色）
             views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
             if (cachedCount >= 0) {
                 val countText = String.format(
                     Locale.getDefault(),
-                    "<b><font color='#FF0000'>%d</font> 个</b>",
+                    "<b><font color='#FF0000'>%d</font> <font color='#00FF00'>个</font></b>",
                     cachedCount
                 )
                 views.setTextViewText(
@@ -114,11 +116,11 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                             // 记录本次成功获取数据的时刻，并把 Chronometer 归零重新计时
                             val nowElapsed = android.os.SystemClock.elapsedRealtime()
                             sharedPref.edit().putLong("last_fetch_elapsed", nowElapsed).apply()
-                            partialViews.setChronometer(R.id.widget_chronometer, nowElapsed, "%s前", true)
+                            partialViews.setChronometer(R.id.widget_chronometer, nowElapsed, "%s", true)
 
                             val countText = String.format(
                                 Locale.getDefault(),
-                                "<font color='#FF0000'>%d</font> 个",
+                                "<font color='#FF0000'>%d</font> <font color='#00FF00'>个</font>",
                                 response.totalCount
                             )
                             partialViews.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
@@ -170,8 +172,9 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
             views.setTextViewText(R.id.widget_host_text, "未配置")   // 第一行
             views.setTextViewText(R.id.widget_update_time, "请打开应用") // 第二行
-            // 第三行：未配置时不计时，直接显示提示文字（Chronometer 继承自 TextView）
-            views.setChronometer(R.id.widget_chronometer, android.os.SystemClock.elapsedRealtime(), "%s前", false)
+            // 第三行：未配置时不计时，隐藏 "前" 后缀，直接显示提示文字（Chronometer 继承自 TextView）
+            views.setChronometer(R.id.widget_chronometer, android.os.SystemClock.elapsedRealtime(), "%s", false)
+            views.setViewVisibility(R.id.widget_chronometer_suffix, View.GONE)
             views.setTextViewText(R.id.widget_chronometer, "设置 IP")    // 第三行
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }

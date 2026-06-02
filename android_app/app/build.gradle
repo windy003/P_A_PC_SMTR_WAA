@@ -12,7 +12,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "2026/6/2-1"
+        versionName "2026/6/2-2"
     }
 
     // 两个并存版本：同一份代码产出两个 applicationId 不同的 App
