@@ -48,21 +48,6 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                 return
             }
 
-            // 获取当前时间
-            val currentTime = Calendar.getInstance()
-            val month = currentTime.get(Calendar.MONTH) + 1
-            val day = currentTime.get(Calendar.DAY_OF_MONTH)
-            val hour = currentTime.get(Calendar.HOUR_OF_DAY)
-            val minute = currentTime.get(Calendar.MINUTE)
-
-            // 使用 HTML 格式实现多颜色显示
-            // 日期时间单行显示：日期和时间用空格分隔
-            val dateTimeDisplay = String.format(
-                Locale.getDefault(),
-                "<font color='#00FF00'>%d-%d</font> <font color='#00FF00'>%d:</font><font color='#FF0000'>%02d</font>",
-                month, day, hour, minute
-            )
-
             // 上次缓存的条目数（用于立即显示；字号由布局的 autosize 自动处理）
             val cachedCount = sharedPref.getInt("cached_count", -1)
 
@@ -82,11 +67,13 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             // 第一行：主机名
             views.setTextViewText(R.id.widget_host_text, hostName)
 
-            // 第三行：日期时间
-            views.setTextViewText(
-                R.id.widget_date_text,
-                android.text.Html.fromHtml(dateTimeDisplay, android.text.Html.FROM_HTML_MODE_LEGACY)
+            // 第三行：距离上次成功获取数据过去的时间（Chronometer，自动每秒递增显示 "xx:xx前"）
+            // base 用上次成功获取数据时记录的 elapsedRealtime，没有记录则用当前时间（从 00:00 开始）
+            val chronometerBase = sharedPref.getLong(
+                "last_fetch_elapsed",
+                android.os.SystemClock.elapsedRealtime()
             )
+            views.setChronometer(R.id.widget_chronometer, chronometerBase, "%s前", true)
 
             // 第二行：个数（使用上次缓存的条目数，数字显示为红色）
             views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
@@ -123,6 +110,11 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
                         if (response != null) {
                             // 缓存条目数
                             sharedPref.edit().putInt("cached_count", response.totalCount).apply()
+
+                            // 记录本次成功获取数据的时刻，并把 Chronometer 归零重新计时
+                            val nowElapsed = android.os.SystemClock.elapsedRealtime()
+                            sharedPref.edit().putLong("last_fetch_elapsed", nowElapsed).apply()
+                            partialViews.setChronometer(R.id.widget_chronometer, nowElapsed, "%s前", true)
 
                             val countText = String.format(
                                 Locale.getDefault(),
@@ -178,7 +170,9 @@ class ScreenshotWidgetProvider : AppWidgetProvider() {
             views.setViewVisibility(R.id.widget_update_time, View.VISIBLE)
             views.setTextViewText(R.id.widget_host_text, "未配置")   // 第一行
             views.setTextViewText(R.id.widget_update_time, "请打开应用") // 第二行
-            views.setTextViewText(R.id.widget_date_text, "设置 IP")    // 第三行
+            // 第三行：未配置时不计时，直接显示提示文字（Chronometer 继承自 TextView）
+            views.setChronometer(R.id.widget_chronometer, android.os.SystemClock.elapsedRealtime(), "%s前", false)
+            views.setTextViewText(R.id.widget_chronometer, "设置 IP")    // 第三行
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 

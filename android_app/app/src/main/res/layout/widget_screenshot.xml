@@ -56,16 +56,15 @@
             android:autoSizeStepGranularity="1sp"
             android:visibility="visible" />
 
-        <!-- 第三行：日期时间 -->
-        <TextView
-            android:id="@+id/widget_date_text"
+        <!-- 第三行：距离上次成功获取数据过去的时间，显示为 "xx:xx前"，秒数自动递增 -->
+        <Chronometer
+            android:id="@+id/widget_chronometer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="4"
-            android:text=""
             android:textSize="12sp"
             android:maxLines="1"
-            android:textColor="#333333"
+            android:textColor="#FF0000"
             android:textStyle="bold"
             android:gravity="center"
             android:includeFontPadding="false"
